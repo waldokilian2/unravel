@@ -1,7 +1,7 @@
 /**
- * Business Analyst plugin for OpenCode.ai
+ * Unravel plugin for OpenCode.ai
  *
- * Injects business analyst bootstrap context via system prompt transform.
+ * Injects Unravel bootstrap context via system prompt transform.
  * Skills are discovered via OpenCode's native skill tool from symlinked directory.
  */
 
@@ -46,16 +46,16 @@ const normalizePath = (p, homeDir) => {
   return path.resolve(normalized);
 };
 
-export const BusinessAnalystPlugin = async ({ client, directory }) => {
+export const UnravelPlugin = async ({ client, directory }) => {
   const homeDir = os.homedir();
-  const businessAnalystSkillsDir = path.resolve(__dirname, '../../skills');
+  const unravelSkillsDir = path.resolve(__dirname, '../../skills');
   const envConfigDir = normalizePath(process.env.OPENCODE_CONFIG_DIR, homeDir);
   const configDir = envConfigDir || path.join(homeDir, '.config/opencode');
 
   // Helper to generate bootstrap content
   const getBootstrapContent = () => {
-    // Try to load using-business-analyst skill
-    const skillPath = path.join(businessAnalystSkillsDir, 'using-business-analyst', 'SKILL.md');
+    // Try to load using-unravel skill
+    const skillPath = path.join(unravelSkillsDir, 'using-unravel', 'SKILL.md');
     if (!fs.existsSync(skillPath)) return null;
 
     const fullContent = fs.readFileSync(skillPath, 'utf8');
@@ -69,13 +69,13 @@ When skills reference tools you don't have, substitute OpenCode equivalents:
 - \`Read\`, \`Write\`, \`Edit\`, \`Bash\` → Your native tools
 
 **Skills location:**
-Business analyst skills are in \`${configDir}/skills/business-analyst/\`
+Unravel skills are in \`${configDir}/skills/unravel/\`
 Use OpenCode's native \`skill\` tool to list and load skills.`;
 
     return `<EXTREMELY_IMPORTANT>
-You have business analysis superpowers.
+You have Unravel superpowers.
 
-**IMPORTANT: The using-business-analyst skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-business-analyst" again - that would be redundant.**
+**IMPORTANT: The using-unravel skill content is included below. It is ALREADY LOADED - you are currently following it. Do NOT use the skill tool to load "using-unravel" again - that would be redundant.**
 
 ${content}
 

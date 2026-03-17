@@ -1,13 +1,13 @@
 ---
-name: using-business-analyst
-description: Use when starting any business analysis task - establishes how to find and use business analyst skills
+name: using-unravel
+description: Use when starting any code analysis task - establishes how to find and use Unravel skills
 ---
 
-# Using Business Analyst Skills
+# Using Unravel Skills
 
-You have business analysis superpowers. These skills automatically extract business artifacts from code.
+You have Unravel superpowers. These skills automatically extract business artifacts from code, helping you understand what a system does by reading what it's built from.
 
-## What Business Analyst Does
+## What Unravel Does
 
 Automatically extracts and documents:
 - **Business Rules** - Conditional logic, validation, exceptions
@@ -20,7 +20,7 @@ Automatically extracts and documents:
 ## How It Works
 
 ## Rule
-**Before any code analysis task, check if a business analyst skill applies.**
+**Before any code analysis task, check if an Unravel skill applies.**
 
 If there's even a 1% chance a skill might apply, you MUST use it.
 
@@ -52,23 +52,23 @@ If there's even a 1% chance a skill might apply, you MUST use it.
 
 ## Available Skills
 
-- business-analyst:extract-business-rules
-- business-analyst:extract-process-flows
-- business-analyst:extract-data-specs
-- business-analyst:extract-user-stories
-- business-analyst:extract-security-nfrs
-- business-analyst:extract-integrations
+- unravel:extract-business-rules
+- unravel:extract-process-flows
+- unravel:extract-data-specs
+- unravel:extract-user-stories
+- unravel:extract-security-nfrs
+- unravel:extract-integrations
 
 ## Available Agents
 
 Agents are autonomous specialists that perform complex multi-step tasks:
 
-- **business-analyst:verification-agent**
+- **unravel:verification-agent**
   - Reviews extracted artifacts for accuracy and completeness
   - Cross-checks that all patterns were captured
   - Validates source locations and documentation
 
-- **business-analyst:artifact-extractor** (via agents/artifact-extractor.md)
+- **unravel:artifact-extractor** (via agents/artifact-extractor.md)
   - Deep extraction for complex files with 10+ patterns
   - Handles large-scale analysis tasks
   - Produces comprehensive output documentation

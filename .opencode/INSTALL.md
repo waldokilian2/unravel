@@ -1,4 +1,4 @@
-# Installing Business Analyst for OpenCode
+# Installing Unravel for OpenCode
 
 ## Prerequisites
 
@@ -7,40 +7,40 @@
 
 ## Installation Steps
 
-### 1. Clone Business Analyst
+### 1. Clone Unravel
 
 ```bash
-git clone https://github.com/waldokilian2/Unravel.git ~/.config/opencode/business-analyst
+git clone https://github.com/waldokilian2/Unravel.git ~/.config/opencode/unravel
 ```
 
 ### 2. Register the Plugin
 
 ```bash
 mkdir -p ~/.config/opencode/plugins
-rm -f ~/.config/opencode/plugins/business-analyst.js
-ln -s ~/.config/opencode/business-analyst/.opencode/plugins/business-analyst.js ~/.config/opencode/plugins/business-analyst.js
+rm -f ~/.config/opencode/plugins/unravel.js
+ln -s ~/.config/opencode/unravel/.opencode/plugins/unravel.js ~/.config/opencode/plugins/unravel.js
 ```
 
 ### 3. Symlink Skills
 
 ```bash
 mkdir -p ~/.config/opencode/skills
-rm -rf ~/.config/opencode/skills/business-analyst
-ln -s ~/.config/opencode/business-analyst/skills ~/.config/opencode/skills/business-analyst
+rm -rf ~/.config/opencode/skills/unravel
+ln -s ~/.config/opencode/unravel/skills ~/.config/opencode/skills/unravel
 ```
 
 ### 4. Restart OpenCode
 
-Verify by asking: "What business analyst skills do you have?"
+Verify by asking: "What Unravel skills do you have?"
 
 ## Usage
 
-Use OpenCode's native `skill` tool to list and load business analyst skills.
+Use OpenCode's native `skill` tool to list and load Unravel skills.
 
 ## Updating
 
 ```bash
-cd ~/.config/opencode/business-analyst
+cd ~/.config/opencode/unravel
 git pull
 ```
 

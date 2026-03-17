@@ -1,6 +1,6 @@
-# Installing Business Analyst for Codex
+# Installing Unravel for Codex
 
-Enable business analyst skills in Codex via native skill discovery.
+Enable Unravel skills in Codex via native skill discovery.
 
 ## Prerequisites
 
@@ -8,21 +8,21 @@ Enable business analyst skills in Codex via native skill discovery.
 
 ## Installation
 
-1. **Clone the business-analyst repository:**
+1. **Clone the Unravel repository:**
    ```bash
-   git clone https://github.com/waldokilian2/Unravel.git ~/.codex/business-analyst
+   git clone https://github.com/waldokilian2/Unravel.git ~/.codex/unravel
    ```
 
 2. **Create the skills symlink:**
    ```bash
    mkdir -p ~/.agents/skills
-   ln -s ~/.codex/business-analyst/skills ~/.agents/skills/business-analyst
+   ln -s ~/.codex/unravel/skills ~/.agents/skills/unravel
    ```
 
    **Windows (PowerShell):**
    ```powershell
    New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.agents\skills"
-   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\business-analyst" "$env:USERPROFILE\.codex\business-analyst\skills"
+   cmd /c mklink /J "$env:USERPROFILE\.agents\skills\unravel" "$env:USERPROFILE\.codex\unravel\skills"
    ```
 
 3. **Restart Codex** to discover the skills.
@@ -30,18 +30,18 @@ Enable business analyst skills in Codex via native skill discovery.
 ## Verify
 
 ```bash
-ls -la ~/.agents/skills/business-analyst
+ls -la ~/.agents/skills/unravel
 ```
 
 ## Updating
 
 ```bash
-cd ~/.codex/business-analyst && git pull
+cd ~/.codex/unravel && git pull
 ```
 
 ## Uninstalling
 
 ```bash
-rm ~/.agents/skills/business-analyst
-rm -rf ~/.codex/business-analyst
+rm ~/.agents/skills/unravel
+rm -rf ~/.codex/unravel
 ```

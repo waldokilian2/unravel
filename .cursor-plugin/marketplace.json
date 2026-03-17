@@ -1,7 +1,7 @@
 {
-  "id": "business-analyst",
-  "name": "Business Analyst",
-  "description": "Automated business artifact extraction from code - extracts business rules, process flows, data specs, user stories, security measures, and integrations",
+  "id": "unravel",
+  "name": "Unravel",
+  "description": "Unravel the mysteries in your code - automatic extraction of business rules, process flows, data specs, user stories, security measures, and integrations",
   "version": "1.0.0",
   "author": "waldokilian2",
   "repository": "https://github.com/waldokilian2/Unravel"

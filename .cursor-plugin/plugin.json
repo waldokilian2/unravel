@@ -1,7 +1,7 @@
 {
-  "name": "business-analyst",
-  "displayName": "Business Analyst",
-  "description": "Automated business artifact extraction from code - rules, processes, data specs, user stories, security, and integrations",
+  "name": "unravel",
+  "displayName": "Unravel",
+  "description": "Unravel the mysteries in your code - automatic extraction of business rules, processes, data specs, user stories, security, and integrations",
   "version": "1.0.0",
   "author": {
     "name": "Waldo Kilian",
@@ -10,7 +10,7 @@
   "homepage": "https://github.com/waldokilian2/Unravel",
   "repository": "https://github.com/waldokilian2/Unravel",
   "license": "MIT",
-  "keywords": ["business-analysis", "documentation", "reverse-engineering", "artifact-extraction"],
+  "keywords": ["unravel", "business-analysis", "documentation", "reverse-engineering", "artifact-extraction"],
   "skills": "./skills/",
   "agents": "./agents/",
   "commands": "./commands/",

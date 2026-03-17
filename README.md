@@ -1,12 +1,12 @@
-# Business Analyst
+# Unravel
 
-Automatic business artifact extraction from source code.
+Unravel the mysteries in your code. Automatic business artifact extraction from source code - understand what any system does by reading what it's built from.
 
 ## Installation
 
 ```bash
-/plugin marketplace add yourname/business-analyst-marketplace
-/plugin install business-analyst@business-analyst-marketplace
+/plugin marketplace add waldokilian2/unravel-marketplace
+/plugin install unravel@unravel-marketplace
 ```
 
 ## Usage
