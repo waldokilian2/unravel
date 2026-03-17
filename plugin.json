@@ -1,0 +1,13 @@
+{
+  "name": "business-analyst",
+  "description": "Automated business artifact extraction from code - rules, processes, data specs, user stories, security, and integrations",
+  "version": "1.0.0",
+  "author": {
+    "name": "Business Analyst",
+    "email": "analyst@example.com"
+  },
+  "homepage": "https://github.com/yourname/business-analyst",
+  "repository": "https://github.com/yourname/business-analyst",
+  "license": "MIT",
+  "keywords": ["business-analysis", "documentation", "reverse-engineering", "artifact-extraction"]
+}

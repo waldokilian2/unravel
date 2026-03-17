@@ -1,0 +1,10 @@
+# Output files
+docs/output/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
