@@ -37,11 +37,26 @@ If there's even a 1% chance a skill might apply, you MUST use it.
 
 ## Workflow
 
+Unravel **always** uses orchestration with subagent execution.
+
+**How it works:**
 1. **Identify** - Recognize code pattern matches a category
-2. **Invoke** - Use matching skill
-3. **Extract** - Skill guides discovery and extraction
-4. **Output** - Artifacts saved to `docs/output/`
-5. **Verify** - Optional verification agent review
+2. **Invoke** - Use matching extraction skill
+3. **Orchestrate** - Skill dispatches subagent(s) for extraction
+4. **Review** - Two-stage review (spec compliance → quality)
+5. **Output** - Artifacts saved to `docs/output/`
+
+**Example:**
+```
+You: What are the business rules in payment.ts?
+Claude: [invokes extract-business-rules skill]
+       [dispatches business-rules-extractor-subagent for payment.ts]
+       [runs spec compliance review]
+       [runs quality review]
+       [aggregates results into docs/output/business-rules.md]
+```
+
+**Key principle:** Every extraction uses fresh subagent(s) with two-stage review, ensuring consistency and quality.
 
 ## Key Principles
 
@@ -52,28 +67,67 @@ If there's even a 1% chance a skill might apply, you MUST use it.
 
 ## Available Skills
 
-- unravel:extract-business-rules
-- unravel:extract-process-flows
-- unravel:extract-data-specs
-- unravel:extract-user-stories
-- unravel:extract-security-nfrs
-- unravel:extract-integrations
+### Extraction Skills (Always Orchestrate)
+Each skill dispatches subagent(s) and runs two-stage review:
+
+- **unravel:extract-business-rules** - Conditional logic, validation, exceptions
+- **unravel:extract-process-flows** - Function call chains, state machines, workflows
+- **unravel:extract-data-specs** - Schemas, ORM classes, DTOs
+- **unravel:extract-user-stories** - Controllers, routes, event handlers
+- **unravel:extract-security-nfrs** - Middleware, auth, logging, performance
+- **unravel:extract-integrations** - HTTP calls, APIs, env vars
+
+### Orchestration Support Skills
+Used by extraction skills for complex scenarios:
+
+- **unravel:orchestrating-extractions** - Master orchestration for complex multi-file extractions
+- **unravel:dispatching-parallel-extractors** - Parallel dispatch for independent files
+- **unravel:planning-extractions** - Task planning for large/unknown scopes
+- **unravel:orchestrating-verification** - Two-stage verification coordination
 
 ## Available Agents
 
-Agents are autonomous specialists that perform complex multi-step tasks:
+### Reviewer Agents
+- **unravel:spec-compliance-reviewer**
+  - Verifies extraction task completed as specified
+  - Checks: all patterns extracted, nothing extra, boundaries respected
+  - Stage 1 of two-stage verification
 
-- **unravel:verification-agent**
+- **unravel:quality-reviewer**
+  - Verifies extraction accuracy and quality
+  - Checks: correct, no hallucinations, well-documented
+  - Stage 2 of two-stage verification
+
+- **unravel:verification-agent** (existing)
   - Reviews extracted artifacts for accuracy and completeness
   - Cross-checks that all patterns were captured
   - Validates source locations and documentation
 
-- **unravel:artifact-extractor** (via agents/artifact-extractor.md)
+### Extraction Subagents
+Focused subagents for single extraction tasks (one file or pattern group):
+
+- **unravel:business-rules-extractor-subagent** - Conditional logic, validation
+- **unravel:process-flows-extractor-subagent** - Function call chains, state machines
+- **unravel:data-specs-extractor-subagent** - Schemas, ORM classes, DTOs
+- **unravel:user-stories-extractor-subagent** - Controllers, routes, event handlers
+- **unravel:security-nfrs-extractor-subagent** - Middleware, auth, logging
+- **unravel:integrations-extractor-subagent** - HTTP calls, APIs, env vars
+
+- **unravel:artifact-extractor** (existing, via agents/artifact-extractor.md)
   - Deep extraction for complex files with 10+ patterns
   - Handles large-scale analysis tasks
   - Produces comprehensive output documentation
 
-Dispatch agents when:
-- Files contain 10+ patterns of the same type
-- Analysis requires multi-step coordination
-- Verification of extracted artifacts is needed
+### When Agents Are Used
+
+**Extraction Subagents:**
+- Always dispatched by extraction skills
+- Even single-file = single subagent
+- Multiple files = parallel subagent dispatch
+- Fresh context per extraction (no pollution)
+
+**Reviewer Agents:**
+- Always dispatched after extraction (two-stage review)
+- Stage 1: spec-compliance-reviewer (completeness check)
+- Stage 2: quality-reviewer (accuracy check)
+- Required for every extraction

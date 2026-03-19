@@ -19,6 +19,22 @@ Use when analyzing code for security measures or non-functional requirements. Tr
 - Caching layers
 - Retry mechanisms
 
+## Always Use Orchestration
+
+This skill **always** orchestrates subagent execution. Even for single-file extractions, a fresh subagent is dispatched.
+
+**Why?**
+- Fresh context per extraction (no pollution)
+- Consistent review process (two-stage: spec → quality)
+- Parallelizable by design
+- Matches Superpowers' subagent-driven-development pattern
+
+**How it works:**
+1. You (orchestrator) analyze scope and identify files
+2. Dispatch one or more security-nfrs-extractor-subagent tasks
+3. For each completed task: run spec compliance review → quality review
+4. Aggregate results into docs/output/security-nfrs.md
+
 ## Core Principle
 **Protection-first: Identify safeguards and operational requirements**
 
@@ -124,6 +140,55 @@ Extraction: 2025-03-17
 - Flag missing security measures explicitly
 - Document both positive (what exists) and negative (what's missing)
 
+## Task Dispatching
+
+**Single file:**
+```
+Task("Extract security/NFRs from auth.middleware.ts")
+
+Subagent receives:
+- File: auth.middleware.ts
+- Artifact type: security-nfrs
+- Output: docs/output/security-nfrs.md
+```
+
+**Multiple files (parallel):**
+```
+Task("Extract security/NFRs from auth middleware")
+Task("Extract security/NFRs from logging infrastructure")
+Task("Extract security/NFRs from rate limiting")
+
+All three run concurrently
+```
+
+## Two-Stage Review (Required)
+
+After each subagent completes:
+
+**Stage 1: Spec Compliance Review**
+```
+Task("Review spec compliance for security/NFRs extraction")
+- All measures in scope extracted?
+- No artifacts outside scope?
+- Output format followed?
+```
+
+**Stage 2: Quality Review** (only after Stage 1 passes)
+```
+Task("Review quality for security/NFRs extraction")
+- Each measure matches actual code?
+- No hallucinations?
+- Clear, well-documented?
+```
+
 ## Integration
-- For complex files (10+ measures), dispatch agents/artifact-extractor.md
-- Use business-analyst:verification-agent to verify output
+
+**Required subagents:**
+- unravel:security-nfrs-extractor-subagent - Focused extraction
+- unravel:spec-compliance-reviewer - Stage 1 review
+- unravel:quality-reviewer - Stage 2 review
+
+**For large tasks (10+ measures, 5+ files):**
+- Use unravel:orchestrating-extractions for full orchestration
+- Use unravel:dispatching-parallel-extractors for parallel execution
+- Use unravel:planning-extractions to create task plans

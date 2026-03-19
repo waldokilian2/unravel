@@ -16,6 +16,22 @@ Use when analyzing code for conditional logic, validation rules, exception handl
 - Regex patterns and format validation
 - Condition checks and assertions
 
+## Always Use Orchestration
+
+This skill **always** orchestrates subagent execution. Even for single-file extractions, a fresh subagent is dispatched.
+
+**Why?**
+- Fresh context per extraction (no pollution)
+- Consistent review process (two-stage: spec → quality)
+- Parallelizable by design
+- Matches Superpowers' subagent-driven-development pattern
+
+**How it works:**
+1. You (orchestrator) analyze scope and identify files
+2. Dispatch one or more business-rules-extractor-subagent tasks
+3. For each completed task: run spec compliance review → quality review
+4. Aggregate results into docs/output/business-rules.md
+
 ## Core Principle
 **Rule-first: Extract the business constraint, not the implementation**
 
@@ -109,7 +125,55 @@ Extraction: 2025-03-17
 - Clarify ambiguous rules with [CONFIRM] notes
 - Flag conflicting rules explicitly
 
+## Task Dispatching
+
+**Single file:**
+```
+Task("Extract business rules from payment.ts")
+
+Subagent receives:
+- File: payment.ts
+- Artifact type: business-rules
+- Output: docs/output/business-rules.md
+```
+
+**Multiple files (parallel):**
+```
+Task("Extract business rules from auth module")
+Task("Extract business rules from payment module")
+Task("Extract business rules from user module")
+
+All three run concurrently
+```
+
+## Two-Stage Review (Required)
+
+After each subagent completes:
+
+**Stage 1: Spec Compliance Review**
+```
+Task("Review spec compliance for business rules extraction")
+- All patterns in scope extracted?
+- No artifacts outside scope?
+- Output format followed?
+```
+
+**Stage 2: Quality Review** (only after Stage 1 passes)
+```
+Task("Review quality for business rules extraction")
+- Each artifact matches actual code?
+- No hallucinations?
+- Clear, well-documented?
+```
+
 ## Integration
 
-- For complex files (10+ rules), dispatch agents/artifact-extractor.md
-- Use with business-analyst:verification-agent to verify output
+**Required subagents:**
+- unravel:business-rules-extractor-subagent - Focused extraction
+- unravel:spec-compliance-reviewer - Stage 1 review
+- unravel:quality-reviewer - Stage 2 review
+
+**For large tasks (10+ patterns, 5+ files):**
+- Use unravel:orchestrating-extractions for full orchestration
+- Use unravel:dispatching-parallel-extractors for parallel execution
+- Use unravel:planning-extractions to create task plans

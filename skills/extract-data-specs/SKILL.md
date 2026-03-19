@@ -17,6 +17,22 @@ Use when analyzing code for data structures, schemas, or type definitions. Trigg
 - Validation annotations
 - Schema files (JSON Schema, GraphQL, etc.)
 
+## Always Use Orchestration
+
+This skill **always** orchestrates subagent execution. Even for single-file extractions, a fresh subagent is dispatched.
+
+**Why?**
+- Fresh context per extraction (no pollution)
+- Consistent review process (two-stage: spec → quality)
+- Parallelizable by design
+- Matches Superpowers' subagent-driven-development pattern
+
+**How it works:**
+1. You (orchestrator) analyze scope and identify files
+2. Dispatch one or more data-specs-extractor-subagent tasks
+3. For each completed task: run spec compliance review → quality review
+4. Aggregate results into docs/output/data-specs.md
+
 ## Core Principle
 **Schema-first: Find data definitions before reading implementation code**
 
@@ -112,6 +128,55 @@ Extraction: 2025-03-17
 - Document required vs optional fields
 - Extract default values if present
 
+## Task Dispatching
+
+**Single file:**
+```
+Task("Extract data specs from user.ts")
+
+Subagent receives:
+- File: user.ts
+- Artifact type: data-specs
+- Output: docs/output/data-specs.md
+```
+
+**Multiple files (parallel):**
+```
+Task("Extract data specs from auth module")
+Task("Extract data specs from payment module")
+Task("Extract data specs from user module")
+
+All three run concurrently
+```
+
+## Two-Stage Review (Required)
+
+After each subagent completes:
+
+**Stage 1: Spec Compliance Review**
+```
+Task("Review spec compliance for data specs extraction")
+- All specs in scope extracted?
+- No artifacts outside scope?
+- Output format followed?
+```
+
+**Stage 2: Quality Review** (only after Stage 1 passes)
+```
+Task("Review quality for data specs extraction")
+- Each spec matches actual code?
+- No hallucinations?
+- Clear, well-documented?
+```
+
 ## Integration
-- For complex files (10+ specs), dispatch agents/artifact-extractor.md
-- Use business-analyst:verification-agent to verify output
+
+**Required subagents:**
+- unravel:data-specs-extractor-subagent - Focused extraction
+- unravel:spec-compliance-reviewer - Stage 1 review
+- unravel:quality-reviewer - Stage 2 review
+
+**For large tasks (10+ entities, 5+ files):**
+- Use unravel:orchestrating-extractions for full orchestration
+- Use unravel:dispatching-parallel-extractors for parallel execution
+- Use unravel:planning-extractions to create task plans

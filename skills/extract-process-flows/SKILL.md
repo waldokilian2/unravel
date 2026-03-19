@@ -16,6 +16,22 @@ Use when analyzing code for function call sequences, state machine transitions, 
 - Async/await sequences
 - Promise chains
 
+## Always Use Orchestration
+
+This skill **always** orchestrates subagent execution. Even for single-file extractions, a fresh subagent is dispatched.
+
+**Why?**
+- Fresh context per extraction (no pollution)
+- Consistent review process (two-stage: spec → quality)
+- Parallelizable by design
+- Matches Superpowers' subagent-driven-development pattern
+
+**How it works:**
+1. You (orchestrator) analyze scope and identify files
+2. Dispatch one or more process-flows-extractor-subagent tasks
+3. For each completed task: run spec compliance review → quality review
+4. Aggregate results into docs/output/process-flows.md
+
 ## Core Principle
 **Trace-first: Follow the execution path from entry point to completion**
 
@@ -104,6 +120,55 @@ Source: src/orders/StateMachine.ts:10-25
 - Trace at least one level deep
 - Include source locations for each flow step
 
+## Task Dispatching
+
+**Single file:**
+```
+Task("Extract process flows from payment.ts")
+
+Subagent receives:
+- File: payment.ts
+- Artifact type: process-flows
+- Output: docs/output/process-flows.md
+```
+
+**Multiple files (parallel):**
+```
+Task("Extract process flows from auth module")
+Task("Extract process flows from payment module")
+Task("Extract process flows from user module")
+
+All three run concurrently
+```
+
+## Two-Stage Review (Required)
+
+After each subagent completes:
+
+**Stage 1: Spec Compliance Review**
+```
+Task("Review spec compliance for process flows extraction")
+- All flows in scope extracted?
+- No artifacts outside scope?
+- Output format followed?
+```
+
+**Stage 2: Quality Review** (only after Stage 1 passes)
+```
+Task("Review quality for process flows extraction")
+- Each flow matches actual code?
+- No hallucinations?
+- Clear, well-documented?
+```
+
 ## Integration
-- For complex files (10+ flows), dispatch agents/artifact-extractor.md
-- Use business-analyst:verification-agent to verify output
+
+**Required subagents:**
+- unravel:process-flows-extractor-subagent - Focused extraction
+- unravel:spec-compliance-reviewer - Stage 1 review
+- unravel:quality-reviewer - Stage 2 review
+
+**For large tasks (10+ flows, 5+ files):**
+- Use unravel:orchestrating-extractions for full orchestration
+- Use unravel:dispatching-parallel-extractors for parallel execution
+- Use unravel:planning-extractions to create task plans
