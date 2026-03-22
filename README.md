@@ -13,48 +13,77 @@ Unravel the mysteries in your code. Automatic business artifact extraction from 
 
 ### Step 1: Select What to Extract
 
-When you ask Unravel to analyze code, it will first ask you to select artifact types:
+When you ask Unravel to analyze code, it will first ask you to select artifact categories:
 
 ```
-Which artifact types would you like to extract?
+What would you like to extract?
 
-□ Business Rules - Conditional logic, validation, exceptions
-□ Process Flows - Function call chains, state machines, workflows
-□ Data Specs - Schemas, ORMs, DTOs, validation
-□ User Stories - Controllers, routes, endpoints
-□ Security/NFRs - Middleware, auth, logging, performance
-□ Integrations - HTTP calls, APIs, env vars, external services
+□ Business Logic - Business rules, process flows, user stories
+□ Data Specifications - Schemas, ORM classes, DTOs, validation
+□ Technical Details - Security/NFRs, integrations
+□ Everything - Extract all 6 artifact types
 ```
 
-### Step 2: Unravel Extracts
+**Follow-up refinement** (if you select a category):
 
-Unravel automatically chooses the best path:
+```
+You selected Business Logic. Which types?
 
-**Simple Path (< 10 files):** Fast, single-pass extraction
-```
-User → Select type(s) → unravel-extractor → Output
+□ All business logic types (rules, processes, user stories)
+□ Business Rules only
+□ Process Flows only
+□ User Stories only
 ```
 
-**Complex Path (10+ files):** Sequential extraction with independent verification
+### Step 2: Choose Execution Style (Multiple Types Only)
+
+If you selected multiple artifact types, you'll be asked:
+
 ```
-User → Select type(s) → unravel-orchestrator → workers (sequential) → verifiers (sequential) → unravel-merger → Output
+You selected [N] artifact types. How should they be processed?
+
+□ Sequential - Complete one type before starting the next
+□ Parallel - Process multiple types concurrently (subject to API limits)
+```
+
+### Step 3: Unravel Extracts
+
+Unravel follows a consistent extraction workflow:
+
+```
+User → Select type(s) → Main Agent follows orchestrating-extraction skill
+  → Spawns extractors (sequential)
+  → Spawns verifiers (sequential)
+  → Spawns merger → Output
 ```
 
 ### Example Workflow
 
 ```
+You: /unravel
+    or
 You: Analyze the payment system
 
-Claude: Which artifact types would you like to extract?
-       [✓] Business Rules
-       [✓] Process Flows
-       [ ] Data Specs
-       [ ] User Stories
-       [ ] Security/NFRs
-       [ ] Integrations
+Claude: What would you like to extract?
+
+       □ Business Logic - Business rules, process flows, user stories
+       □ Data Specifications - Schemas, ORM classes, DTOs, validation
+       □ Technical Details - Security/NFRs, integrations
+       □ Everything - Extract all 6 artifact types
+
+       [User selects Business Logic]
+
+Claude: You selected Business Logic. Which types?
+
+       □ All business logic types (rules, processes, user stories)
+       □ Business Rules only
+       □ Process Flows only
+       □ User Stories only
+
+       [User selects "All business logic types"]
 
 Claude: Found 47 files across 3 modules.
-       Using complex path with sequential execution.
+       Processing business-rules with sequential execution.
 
        Module 1/3: Extracting business-rules... ✓
        Module 1/3: Verifying business-rules... ✓
@@ -68,9 +97,12 @@ Claude: Found 47 files across 3 modules.
 
        Now extracting process-flows...
        [same process for process-flows]
+
+       Now extracting user-stories...
+       [same process for user-stories]
 ```
 
-### Step 3: Executive Summary (Optional)
+### Step 4: Executive Summary (Optional)
 
 After all extractions complete, Unravel offers to create an executive summary:
 
@@ -101,20 +133,79 @@ All extracted artifacts are saved to `docs/output/`:
 
 ## How It Works
 
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Main Agent (You)                        │
+│                                                             │
+│  Follows orchestrating-extraction skill                     │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  • Counts files & splits into modules               │   │
+│  │  • Spawns agents SEQUENTIALLY (one at a time)       │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 1)          ←────────→    (Module 1)
+                │                           │
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 2)          ←────────→    (Module 2)
+                │                           │
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 3)          ←────────→    (Module 3)
+                │                           │
+                └─────────────┬─────────────┘
+                              │
+                       Spawn Agent
+                  unravel-merger
+                              │
+                       Spawn Agent
+              unravel-summarizer (optional)
+```
+
+**Key:** The horizontal arrows (←────────→) indicate workflow sequence, not automatic spawning. The Main Agent explicitly spawns each agent: extractor completes → Main Agent spawns corresponding verifier → after all verifiers pass → Main Agent spawns merger.
+
 ### Agents
 
 | Agent | Purpose |
 |-------|---------|
-| **unravel-extractor** | Extract patterns from files (< 10 files) |
-| **unravel-orchestrator** | Coordinate workers, verifiers, and merger (10+ files) |
+| **unravel-extractor** | Extract patterns from files (per module) |
 | **unravel-verifier** | Independently verify extraction outputs |
 | **unravel-merger** | Combine verified outputs into final file |
 | **unravel-summarizer** | Create executive summary from all outputs |
 
+### Skills
+
+| Skill | Purpose |
+|-------|---------|
+| **orchestrating-extraction** | Coordinate extractors, verifiers, and merger for all extractions |
+| **using-unravel** | Main guide for using Unravel |
+| **extract-business-rules** | Domain knowledge for business rules |
+| **extract-process-flows** | Domain knowledge for process flows |
+| **extract-data-specs** | Domain knowledge for data specs |
+| **extract-user-stories** | Domain knowledge for user stories |
+| **extract-security-nfrs** | Domain knowledge for security/NFRs |
+| **extract-integrations** | Domain knowledge for integrations |
+
 ### Execution Model
 
-- **Orchestrators always run sequential internally:** Workers and verifiers run one at a time
-- **Multiple orchestrators:** When extracting multiple artifact types, user chooses parallel or sequential
-- **One artifact type per orchestrator:** Multiple types = multiple orchestrators
+- **All agents spawned by main agent:** No nested agent spawning
+- **Sequential execution:** Extractors run one at a time, verifiers run one at a time
 - **Independent verification:** Each module's output is verified before merging
 - **Fail-fast:** Stops on errors, doesn't merge partial/bad results
+- **One artifact type per workflow:** Multiple types = multiple complete workflows
+
+### Commands
+
+| Command | Purpose |
+|---------|---------|
+| **/unravel** | Start Unravel extraction |
+| **/verify** | Verify extracted artifacts |

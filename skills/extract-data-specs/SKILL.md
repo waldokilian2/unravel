@@ -47,20 +47,44 @@ grep -r "DTO\|dto\|Request\|Response" --include="*.ts" --include="*.js" -l | hea
 
 ## Output Format
 
+**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Data Specifications` as the top-level title.
+
+**Per-module extractor output:**
 ```markdown
-## Data Specifications
+## [Module Name] Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+| Field | Type | Constraints | Source |
+|-------|------|-------------|--------|
+| [field name] | [data type] | [validation/rules] | [file:line] |
+| [field name] | [data type] | [validation/rules] | [file:line] |
+```
+
+**Final merged output (after merger combines all modules):**
+```markdown
+# Data Specifications
 
 Extraction: [YYYY-MM-DD]
 
-### [Entity/Schema Name]
+## Extraction Summary
+- **Total Artifacts:** [count]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [list]
+- **Verification:** Each module independently verified
+
+---
+
+## auth Module
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
 | [field name] | [data type] | [validation/rules] | [file:line] |
 
-### [DTO/Interface Name]
-| Field | Type | Required | Constraints | Source |
-|-------|------|----------|-------------|--------|
-| [field name] | [data type] | Yes/No | [validation] | [file:line] |
+## payment Module
+| Field | Type | Constraints | Source |
+|-------|------|-------------|--------|
+| [field name] | [data type] | [validation/rules] | [file:line] |
 ```
 
 ## Core Principles

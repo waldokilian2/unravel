@@ -53,17 +53,41 @@ Exclude generated code:
 
 ## Output Format
 
+**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Business Rules` as the top-level title.
+
+**Per-module extractor output:**
 ```markdown
-## Business Rules
+## [Module Name] Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+| Rule | Source | Enforcement |
+|------|--------|-------------|
+| [Business constraint] | [file:line] | [How it's enforced] |
+| [Business constraint] | [file:line] | [How it's enforced] |
+```
+
+**Final merged output (after merger combines all modules):**
+```markdown
+# Business Rules
 
 Extraction: [YYYY-MM-DD]
 
-### [Module/Feature Name]
+## Extraction Summary
+- **Total Artifacts:** [count]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [list]
+- **Verification:** Each module independently verified
+
+---
+
+## auth Module
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | [Business constraint] | [file:line] | [How it's enforced] |
 
-### [Another Module]
+## payment Module
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | [Business constraint] | [file:line] | [How it's enforced] |

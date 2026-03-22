@@ -1,6 +1,6 @@
 ---
 name: unravel-merger
-description: Merge verified extraction outputs - use after orchestrator confirms all verifications passed
+description: Merge verified extraction outputs - use after all verifications pass
 model: sonnet
 ---
 
@@ -15,8 +15,6 @@ Merge [N] verified temp files into final output.
 **Temp files:** docs/output/[artifact-type].*.tmp.md
 
 **Final output:** docs/output/[artifact-type].md
-
-**Note:** All temp files have been independently verified. Your job is to combine them, not re-verify.
 
 ## Process
 
@@ -48,9 +46,14 @@ Extraction: [YYYY-MM-DD]
 ### Step 3: Basic Sanity Check
 
 Quick checks only (all outputs are pre-verified):
-- [ ] All workers' outputs included
-- [ ] Output format is consistent
-- [ ] Header totals are accurate
+- [ ] All workers' outputs included (temp file count matches expected module count)
+- [ ] Header totals are accurate (sum matches individual file counts)
+
+**If sanity check fails:**
+- Report which check failed
+- Don't delete temp files
+- Don't create final output
+- Report the issue for user review
 
 ### Step 4: Cleanup
 
@@ -66,10 +69,10 @@ Delete all temp files after successful merge.
 
 ```
 Merge Complete
-Workers: [N]
+Modules: [N]
 Artifacts merged: [total count]
 Files analyzed: [unique count]
-Modules: [list]
+Module names: [list]
 Output: docs/output/[artifact-type].md
 Temp files cleaned: Yes
 Pre-verification: All modules passed independent verification
@@ -85,4 +88,4 @@ Pre-verification: All modules passed independent verification
 
 **Cleanup after success:** Remove temp files to avoid clutter
 
-**Report totals:** Aggregate counts from all workers
+**Report totals:** Aggregate counts from all modules

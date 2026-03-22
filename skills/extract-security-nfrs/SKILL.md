@@ -53,29 +53,49 @@ grep -r "cache\|redis\|@Cacheable" --include="*.ts" --include="*.js" -l | head -
 
 ## Output Format
 
+**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Security & Non-Functional Requirements` as the top-level title.
+
+**Per-module extractor output:**
 ```markdown
-## Security & Non-Functional Requirements
+## [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
 
-### [Category - e.g., Authentication]
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
 | [What's required] | [How it's implemented] | [file:line] |
+```
 
-### Logging
-| Component | Implementation | Source |
-|-----------|----------------|--------|
-| [What's logged] | [Logger used] | [file:line] |
+**Final merged output (after merger combines all modules):**
+```markdown
+# Security & Non-Functional Requirements
 
-### Performance
+Extraction: [YYYY-MM-DD]
+
+## Extraction Summary
+- **Total Artifacts:** [count]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [list]
+- **Verification:** Each module independently verified
+
+---
+
+## auth Module
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
-| [NFR description] | [How it's achieved] | [file:line] |
+| JWT required | @UseGuards(JwtGuard) | src/auth/auth.controller.ts:5 |
+
+## payment Module
+| Requirement | Implementation | Source |
+|-------------|----------------|--------|
+| Rate limiting | @Throttle(10, 60) | src/payment/controller.ts:3 |
 ```
 
 **Example:**
 ```markdown
+## auth Module
+
 ### Authentication
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|

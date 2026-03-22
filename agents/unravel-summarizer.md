@@ -40,7 +40,7 @@ Create `docs/output/EXECUTIVE-SUMMARY.md` with:
 # Executive Summary
 
 **Date:** [YYYY-MM-DD]
-**Codebase:** [repository/project name if identifiable]
+**Codebase:** [optional - try package.json, pom.xml, or git remote URL; if not found, use "Unknown"]
 **Artifacts Analyzed:** [list of types found]
 
 ---
@@ -103,7 +103,7 @@ Based on the analysis:
 
 2. **[Recommendation 2]**
 
-3. **[Recommendment 3]**
+3. **[Recommendation 3]**
 
 ---
 

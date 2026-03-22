@@ -48,23 +48,53 @@ grep -r "webhook\|queue\|pubsub\|kafka\|sqs" --include="*.ts" --include="*.js" -
 
 ## Output Format
 
+**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# External Integrations` as the top-level title.
+
+**Per-module extractor output:**
 ```markdown
-## External Integrations
+## [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
 
-### [Service Name - e.g., Payment Gateway]
 | Detail | Value | Source |
 |--------|-------|--------|
 | Provider | [Service name] | [file:line] |
 | Endpoint | [URL/identifier] | [env: VAR_NAME] |
 | Auth Method | [API Key/OAuth/etc] | [env: VAR_NAME] |
-| SDK | [package@version] | [file:line] |
-| Webhook | [route if any] | [file:line] |
+```
+
+**Final merged output (after merger combines all modules):**
+```markdown
+# External Integrations
+
+Extraction: [YYYY-MM-DD]
+
+## Extraction Summary
+- **Total Artifacts:** [count]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [list]
+- **Verification:** Each module independently verified
+
+---
+
+## payment Module
+| Detail | Value | Source |
+|--------|-------|--------|
+| Provider | Stripe | src/payment/stripe.ts:1 |
+| Endpoint | https://api.stripe.com | env: STRIPE_API_URL |
+
+## email Module
+| Detail | Value | Source |
+|--------|-------|--------|
+| Provider | SendGrid | src/email/sendgrid.ts:1 |
+| Endpoint | https://api.sendgrid.com | env: SENDGRID_URL |
 ```
 
 **Example:**
 ```markdown
+## payment Module
+
 ### Payment Gateway
 | Detail | Value | Source |
 |--------|-------|--------|
@@ -73,13 +103,6 @@ Extraction: [YYYY-MM-DD]
 | Auth Method | API Key | env: STRIPE_API_KEY |
 | SDK | stripe@14.0.0 | package.json |
 | Webhook | POST /webhook/stripe | src/webhooks/stripe.ts:12 |
-
-### Email Service
-| Detail | Value | Source |
-|--------|-------|--------|
-| Provider | SendGrid | src/email/sendgrid.ts:1 |
-| Endpoint | https://api.sendgrid.com | env: SENDGRID_URL |
-| Auth Method | API Key | env: SENDGRID_API_KEY |
 ```
 
 ## Core Principles

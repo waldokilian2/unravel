@@ -11,12 +11,12 @@ Use the Skill tool to read: ${PLUGIN_ROOT}/skills/using-unravel/SKILL.md
 
 This provides complete documentation on:
 - Available artifact types and when to use each
-- Architecture overview (Simple vs Complex path)
+- Architecture overview
 - How to invoke Unravel correctly
 - All agents and their responsibilities
 - Output locations
 
-**Key:** When extracting multiple artifact types, launch separate orchestrators/extractors for each type. Do not combine into a single call.
+**Key:** When extracting multiple artifact types, launch separate orchestrating-extraction workflows for each type. Do not combine into a single call.
 "
 
 escape_for_json() {

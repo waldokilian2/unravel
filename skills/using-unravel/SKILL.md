@@ -21,52 +21,41 @@ Extracts and documents:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Unravel Core                            │
+│                     Main Agent (You)                        │
+│                                                             │
+│  Follows orchestrating-extraction skill                     │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  • Counts files & splits into modules               │   │
+│  │  • Spawns agents SEQUENTIALLY (one at a time)       │   │
+│  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
-              ┌───────────────┴───────────────┐
-              │                               │
-         ┌────▼─────┐                   ┌────▼─────┐
-         │  Simple  │                   │  Complex │
-         │  Path    │                   │  Path    │
-         │ (<10)    │                   │ (10+)    │
-         └────┬─────┘                   └────┬─────┘
-              │                               │
-    ┌─────────▼─────────┐           ┌─────────▼─────────┐
-    │  unravel-extractor│           │ unravel-orchestrator│
-    │  (single-pass)    │           │  (always sequential │
-    │                   │           │   internally)       │
-    │  • Extract        │           └─────────┬─────────┘
-    │  • Self-verify    │                     │
-    │  • Output         │         ┌───────────┼───────────┐
-    └───────────────────┘         │           │           │
-                            ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
-                            |Worker 1|  |Worker 2|  |Worker 3|
-                            |Extract │  |Extract │  |Extract │
-                            └────┬───┘  └───┬───┘  └───┬───┘
-                                 │         │         │
-                              Sequential (one at a time)
-                                 │         │         │
-                            ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
-                            |Verif.1 │  |Verif.2 │  |Verif.3 │
-                            └────┬───┘  └───┬───┘  └───┬───┘
-                                 │         │         │
-                                 └─────────┼─────────┘
-                                           │
-                            ┌──────────────▼──────────────┐
-                            │  unravel-merger              │
-                            │  • Combine outputs           │
-                            │  • Cleanup temp files        │
-                            └──────────────┬───────────────┘
-                                           │
-                            ┌──────────────▼──────────────┐
-                            │  unravel-summarizer (optional)│
-                            │  • Executive summary         │
-                            └───────────────────────────────┘
-
-Multiple orchestrators can run in parallel (user choice),
-but each orchestrator is always sequential internally.
+                ┌─────────────┴─────────────┐
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 1)          ←────────→    (Module 1)
+                │                           │
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 2)          ←────────→    (Module 2)
+                │                           │
+                │                           │
+         Spawn Agent                    Spawn Agent
+    unravel-extractor              unravel-verifier
+      (Module 3)          ←────────→    (Module 3)
+                │                           │
+                └─────────────┬─────────────┘
+                              │
+                       Spawn Agent
+                  unravel-merger
+                              │
+                       Spawn Agent
+              unravel-summarizer (optional)
 ```
+
+**Key:** The horizontal arrows (←────────→) indicate workflow sequence, not automatic spawning. The Main Agent explicitly spawns each agent: extractor completes → Main Agent spawns corresponding verifier → after all verifiers pass → Main Agent spawns merger.
 
 ## When to Use Unravel
 
@@ -81,68 +70,99 @@ but each orchestrator is always sequential internally.
 
 ## How to Invoke
 
+**Option 1: Use /unravel command**
+```
+You: /unravel
+```
+
+**Option 2: Direct request**
+```
+You: Extract business rules from auth.ts
+You: Analyze the payment system
+You: What are the validation rules in this code?
+```
+
 **Step 1: Ask user to select artifact type(s)**
 
 When the user asks to analyze or extract from code, present this selection:
 
 ```
-Which artifact types would you like to extract?
+What would you like to extract?
 
-Select one or more:
-□ Business Rules - Conditional logic, validation, exceptions
-□ Process Flows - Function call chains, state machines, workflows
-□ Data Specs - Schemas, ORMs, DTOs, validation
-□ User Stories - Controllers, routes, endpoints
-□ Security/NFRs - Middleware, auth, logging, performance
-□ Integrations - HTTP calls, APIs, env vars, external services
+□ Business Logic - Business rules, process flows, user stories
+□ Data Specifications - Schemas, ORM classes, DTOs, validation
+□ Technical Details - Security/NFRs, integrations
+□ Everything - Extract all 6 artifact types
 ```
+
+**Follow-up refinement (if user selects a category):**
+
+If user selects a category (not "Everything"), ask:
+```
+You selected [Category Name]. Which types?
+
+□ All [category] types
+□ [Type 1] only
+□ [Type 2] only
+□ [Type 3] only
+```
+
+**Category mappings:**
+- Business Logic → business-rules, process-flows, user-stories
+- Data Specifications → data-specs
+- Technical Details → security-nfrs, integrations
 
 **Step 2: For multiple artifact types, ask execution preference**
 
 If user selected more than one artifact type:
 ```
-You selected [N] artifact types to extract. How should the orchestrators run?
+You selected [N] artifact types to extract. How should they be processed?
 
 □ Parallel - Faster, but check your model's concurrency limit (usually 3)
 □ Sequential - Slower, but no concurrency concerns
 ```
 
-**Direct invocation:**
+**Invocation examples:**
+
+```
+You: /unravel
+Claude: What would you like to extract?
+       □ Business Logic - Business rules, process flows, user stories
+       □ Data Specifications - Schemas, ORM classes, DTOs, validation
+       □ Technical Details - Security/NFRs, integrations
+       □ Everything - Extract all 6 artifact types
+       [user selects Business Logic]
+Claude: You selected Business Logic. Which types?
+       □ All business logic types
+       □ Business Rules only
+       □ Process Flows only
+       □ User Stories only
+       [user selects "All business logic types"]
+       Claude: [follows orchestrating-extraction skill for each type sequentially]
+```
+
 ```
 You: Extract business rules from auth.ts
-Claude: [uses unravel-extractor directly]
+Claude: [follows orchestrating-extraction skill for business-rules]
 ```
 
-**Implicit invocation (pattern detection):**
 ```
 You: What are the validation rules in this code?
-Claude: [detects pattern → uses unravel-extractor for business-rules]
+Claude: [follows orchestrating-extraction skill for business-rules]
 ```
 
-**Large codebase (single artifact type):**
 ```
 You: Analyze business rules across the entire payment system
-Claude: [uses unravel-orchestrator with sequential internal execution]
+Claude: [follows orchestrating-extraction skill with sequential execution]
 ```
 
-**Large codebase (multiple artifact types):**
 ```
 You: Analyze everything about the payment system
-Claude: [presents selection, then asks about orchestrator execution]
-
-You selected [N] artifact types. How should the orchestrators run?
+Claude: [presents category selection, then asks about execution if multiple types]
 □ Parallel - Faster, but check your model's concurrency limit (usually 3)
 □ Sequential - Slower, but no concurrency concerns
 
-[Then launches SEPARATE orchestrators per user's choice]
-  → orchestrator for business-rules
-  → orchestrator for process-flows
-  → orchestrator for data-specs
-  → orchestrator for user-stories
-  → orchestrator for security-nfrs
-  → orchestrator for integrations
-
-Each orchestrator runs independently with sequential internal execution.
+[Then processes each type with complete extraction workflow]
 ```
 
 **Step 3: Offer executive summary**
@@ -158,30 +178,32 @@ All extractions complete! Would you like me to create an executive summary?
 ## Agents
 
 ### unravel-extractor
-**Purpose:** Extract and verify in one pass
-**Use for:** < 10 files, targeted extractions
+**Purpose:** Extract artifacts from assigned files
+**Use for:** Per-module extraction (spawned by orchestrating-extraction skill)
 **Process:**
-1. Read skill for domain knowledge
-2. Discover hotspots (grep/glob)
-3. Extract + self-verify each artifact
-4. Output to docs/output/[type].md
+1. Read skill for domain knowledge (pattern definitions, output format)
+2. Extract + self-verify each artifact from **provided file list**
+3. Output to docs/output/[type].[module].tmp.md
 
-### unravel-orchestrator
-**Purpose:** Coordinate workers, verifiers, and merger for large tasks
-**Use for:** 10+ files, codebase-wide analysis
+**Note:** The orchestrator discovers files and passes specific paths to the extractor. The extractor does NOT do file discovery.
+
+### orchestrating-extraction (skill)
+**Purpose:** Coordinate extractors, verifiers, and merger for all extractions
+**Use for:** All extraction tasks (small and large)
 **Process:**
-1. Count files with patterns
-2. If < 10: use unravel-extractor
-3. If >= 10: split into modules, launch workers SEQUENTIALLY (one at a time)
-4. Launch verifiers SEQUENTIALLY as workers complete
-5. When all verifiers pass: launch unravel-merger
+1. Read skill for hotspot patterns
+2. Use Glob/Grep to discover all relevant files
+3. Split into modules (by directory/feature)
+4. Spawn extractors SEQUENTIALLY (each gets specific file list)
+5. Spawn verifiers SEQUENTIALLY as extractors complete
+6. When all verifiers pass: spawn unravel-merger agent
 
-**IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple orchestrators.
-**Execution:** Always sequential internally (workers and verifiers one at a time).
+**IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple complete workflows.
+**Execution:** Always sequential (extractors → verifiers → merger, one at a time).
 
 ### unravel-verifier
 **Purpose:** Independently verify extraction outputs
-**Use for:** After each worker completes (orchestrator dispatches)
+**Use for:** After each extractor completes (main agent dispatches)
 **Process:**
 1. Read extraction output
 2. Cross-check against source code
@@ -190,7 +212,7 @@ All extractions complete! Would you like me to create an executive summary?
 
 ### unravel-merger
 **Purpose:** Combine verified outputs into final file
-**Use for:** After orchestrator dispatches workers
+**Use for:** After main agent dispatches extractors
 **Process:**
 1. Read all temp files
 2. Merge into single output
@@ -227,8 +249,10 @@ All artifacts saved to: `docs/output/`
 
 **No hallucinations:** Only extract what exists in the code
 
-**Choose the right path:** Simple for small tasks, complex for large
+**Consistent workflow:** All extractions follow the same orchestration pattern
 
-**One artifact per orchestrator:** Multiple types = multiple orchestrators
+**One artifact per workflow:** Multiple types = multiple complete workflows
 
 **Optional summary:** Offer executive summary after completion
+
+**Sequential execution:** All agents spawn sequentially, no nesting

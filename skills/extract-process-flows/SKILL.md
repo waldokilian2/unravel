@@ -46,24 +46,43 @@ grep -r "\.then(" --include="*.ts" --include="*.js" -l | head -20
 
 ## Output Format
 
+**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Process Flows` as the top-level title.
+
+**Per-module extractor output:**
 ```markdown
-## Process Flows
+## [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
 
-### [Flow Name]
 1. [step1]() → [step2]() → [step3]()
    Source: [file:line-range]
 
-### [State Machine Name]
+2. [step1]() → [step2]()
+   Source: [file:line-range]
+```
+
+**Final merged output (after merger combines all modules):**
+```markdown
+# Process Flows
+
+Extraction: [YYYY-MM-DD]
+
+## Extraction Summary
+- **Total Artifacts:** [count]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [list]
+- **Verification:** Each module independently verified
+
+---
+
+## auth Module
+1. [step1]() → [step2]() → [step3]()
+   Source: [file:line-range]
+
+## payment Module
 States: `[state1]` → `[state2]` → `[state3]`
 Transitions: [file:line-range]
-
-### [Event-Driven Flow]
-Trigger: [event]
-Handler: [function]
-Flow: [step1]() → [step2]()
-Source: [file:line-range]
 ```
 
 ## Core Principles
