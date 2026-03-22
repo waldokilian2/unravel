@@ -1,165 +1,138 @@
 ---
 name: using-unravel
-description: Use when starting any code analysis task - establishes how to find and use Unravel skills
+description: Use when starting any code analysis task - establishes how to find and use Unravel
 ---
 
-# Using Unravel Skills
+# Using Unravel
 
-You have Unravel superpowers. These skills automatically extract business artifacts from code, helping you understand what a system does by reading what it's built from.
+You have Unravel superpowers. Unravel automatically extracts business artifacts from code.
 
 ## What Unravel Does
 
-Automatically extracts and documents:
+Extracts and documents:
 - **Business Rules** - Conditional logic, validation, exceptions
-- **Process Flows** - Function stacks, state machines, workflows
-- **Data Specs** - Schemas, ORMs, DTOs, validation annotations
-- **User Stories** - Controller/route definitions imply user intent
-- **Security/NFRs** - Middleware, auth, logging
-- **Integrations** - HTTP calls, env vars, API keys
+- **Process Flows** - Function call chains, state machines, workflows
+- **Data Specs** - Schemas, ORMs, DTOs, validation
+- **User Stories** - Controllers, routes, endpoints
+- **Security/NFRs** - Middleware, auth, logging, performance
+- **Integrations** - HTTP calls, APIs, env vars, external services
 
-## How It Works
+## Architecture
 
-## Rule
-**Before any code analysis task, check if an Unravel skill applies.**
-
-If there's even a 1% chance a skill might apply, you MUST use it.
-
-## When Skills Trigger
-
-| Pattern | Triggers Skill |
-|---------|----------------|
-| If/else, guard clauses, validation | extract-business-rules |
-| Function call chains, state machines | extract-process-flows |
-| Schemas, ORM classes, DTOs | extract-data-specs |
-| Controllers, routes, event handlers | extract-user-stories |
-| Middleware, auth decorators, logging | extract-security-nfrs |
-| HTTP requests, fetch/axios, env vars | extract-integrations |
-
-## Workflow
-
-Unravel **always** uses orchestration with subagent execution.
-
-**How it works:**
-1. **Identify** - Recognize code pattern matches a category
-2. **Select** - Ask user which artifact types to extract
-3. **Choose execution** - Ask sequential or parallel (if multiple types)
-4. **Invoke** - Use matching extraction skill(s)
-5. **Orchestrate** - Skill dispatches subagent(s) for extraction
-6. **Review** - Two-stage review (spec compliance → quality)
-7. **Output** - Artifacts saved to `docs/output/`
-
-## User Selection Pattern
-
-When starting an extraction, guide the user through these questions:
-
-**Step 1: Select Artifact Types**
 ```
-"Which artifact types would you like to extract from the codebase?"
-
-[ ] Business Rules (conditional logic, validation, exceptions)
-[ ] User Stories (routes, controllers, user intent)
-[ ] Process Flows (function call chains, state machines, workflows)
-[ ] Data Specs (schemas, DTOs, ORMs, validation)
-[ ] Security/NFRs (auth, middleware, logging, performance)
-[ ] Integrations (APIs, env vars, external services)
-[ ] All of the above
+┌─────────────────────────────────────────────────────────────┐
+│                     Unravel Core                            │
+└─────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┴───────────────┐
+              │                               │
+         ┌────▼─────┐                   ┌────▼─────┐
+         │  Simple  │                   │  Complex │
+         │  Path    │                   │  Path    │
+         └────┬─────┘                   └────┬─────┘
+              │                               │
+    ┌─────────▼─────────┐           ┌─────────▼─────────┐
+    │  unravel-extractor│           │ unravel-orchestrator│
+    │  (single-pass)    │           │  (dispatch only)  │
+    │                   │           └─────────┬─────────┘
+    │  • Extract        │                     │
+    │  • Self-verify    │         ┌───────────┼───────────┐
+    │  • Output         │         │           │           │
+    └───────────────────┘    ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
+                             |Worker 1|  |Worker 2|  |Worker 3|
+                             |Extract │  |Extract │  |Extract │
+                             └────┬───┘  └───┬───┘  └───┬───┘
+                                  │         │         │
+                                  └─────────┼─────────┘
+                                            │
+                                  ┌─────────▼─────────┐
+                                  │  unravel-merger   │
+                                  │  (combine + verify│
+                                  │   aggregate)      │
+                                  └───────────────────┘
 ```
 
-**Step 2: Execution Mode (if 2+ types selected)**
-```
-"How should the extractions run?"
+## When to Use Unravel
 
-[ ] Sequential (one category finishes before next starts)
-[ ] Parallel (all categories run simultaneously)
-```
+| Trigger | Artifact Type |
+|---------|---------------|
+| If/else, validation, exceptions | Business Rules |
+| Function call chains, state machines | Process Flows |
+| Schemas, ORM classes, DTOs | Data Specs |
+| Controllers, routes, event handlers | User Stories |
+| Middleware, auth, logging | Security/NFRs |
+| HTTP calls, fetch/axios, env vars | Integrations |
 
-**Step 3: Execute Based on Selection**
-- **Single category** → Invoke that extraction skill directly
-- **Multiple, Sequential** → Invoke skills one at a time, wait for each
-- **Multiple, Parallel** → Launch Agent() for each category simultaneously
+## How to Invoke
 
-**Example:**
+**Direct invocation:**
 ```
-You: What are the business rules in payment.ts?
-Claude: [invokes extract-business-rules skill]
-       [dispatches business-rules-extractor-subagent for payment.ts]
-       [runs spec compliance review]
-       [runs quality review]
-       [aggregates results into docs/output/business-rules.md]
+You: Extract business rules from auth.ts
+Claude: [uses unravel-extractor directly]
 ```
 
-**Key principle:** Every extraction uses fresh subagent(s) with two-stage review, ensuring consistency and quality.
+**Implicit invocation (pattern detection):**
+```
+You: What are the validation rules in this code?
+Claude: [detects pattern → uses unravel-extractor for business-rules]
+```
+
+**Large codebase:**
+```
+You: Analyze the entire payment system
+Claude: [uses unravel-orchestrator → parallel workers → unravel-merger]
+```
+
+## Agents
+
+### unravel-extractor
+**Purpose:** Extract and verify in one pass
+**Use for:** < 10 files, targeted extractions
+**Process:**
+1. Read skill for domain knowledge
+2. Discover hotspots (grep/glob)
+3. Extract + self-verify each artifact
+4. Output to docs/output/[type].md
+
+### unravel-orchestrator
+**Purpose:** Dispatch parallel workers for large tasks
+**Use for:** 10+ files, codebase-wide analysis
+**Process:**
+1. Count files with patterns
+2. If < 10: use unravel-extractor
+3. If >= 10: split into modules, launch parallel workers
+4. Each worker outputs to temp file
+5. Launch unravel-merger
+
+### unravel-merger
+**Purpose:** Combine parallel outputs and verify
+**Use for:** After orchestrator dispatches workers
+**Process:**
+1. Read all temp files
+2. Merge into single output
+3. Verify aggregate (completeness, quality)
+4. Cleanup temp files
+5. Output final: docs/output/[type].md
+
+## Output Location
+
+All artifacts saved to: `docs/output/`
+
+- business-rules.md
+- process-flows.md
+- data-specs.md
+- user-stories.md
+- security-nfrs.md
+- integrations.md
 
 ## Key Principles
 
-- **Hotspot-first** - Find relevant files before reading
-- **Token-efficient** - Only read files with patterns
-- **Accurate** - Source locations with every artifact
-- **No hallucinations** - Only extract what exists
+**Hotspot-first:** Find relevant files before reading (don't read everything)
 
-## Available Skills
+**Source locations:** Include file:line for every artifact
 
-### Extraction Skills (Always Orchestrate)
-Each skill dispatches subagent(s) and runs two-stage review:
+**No hallucinations:** Only extract what exists in the code
 
-- **unravel:extract-business-rules** - Conditional logic, validation, exceptions
-- **unravel:extract-process-flows** - Function call chains, state machines, workflows
-- **unravel:extract-data-specs** - Schemas, ORM classes, DTOs
-- **unravel:extract-user-stories** - Controllers, routes, event handlers
-- **unravel:extract-security-nfrs** - Middleware, auth, logging, performance
-- **unravel:extract-integrations** - HTTP calls, APIs, env vars
+**Choose the right path:** Simple for small tasks, complex for large
 
-### Orchestration Support Skills
-Used by extraction skills for complex scenarios:
-
-- **unravel:orchestrating-extractions** - Master orchestration for complex multi-file extractions
-- **unravel:dispatching-sequential-extractors** - Sequential dispatch for files within same category
-- **unravel:planning-extractions** - Task planning for large/unknown scopes
-- **unravel:orchestrating-verification** - Two-stage verification coordination
-
-## Available Agents
-
-### Reviewer Agents
-- **unravel:spec-compliance-reviewer**
-  - Verifies extraction task completed as specified
-  - Checks: all patterns extracted, nothing extra, boundaries respected
-  - Stage 1 of two-stage verification
-
-- **unravel:quality-reviewer**
-  - Verifies extraction accuracy and quality
-  - Checks: correct, no hallucinations, well-documented
-  - Stage 2 of two-stage verification
-
-- **unravel:verification-agent** (existing)
-  - Reviews extracted artifacts for accuracy and completeness
-  - Cross-checks that all patterns were captured
-  - Validates source locations and documentation
-
-### Extraction Subagents
-Focused subagents for single extraction tasks (one file or pattern group):
-
-- **unravel:business-rules-extractor-subagent** - Conditional logic, validation
-- **unravel:process-flows-extractor-subagent** - Function call chains, state machines
-- **unravel:data-specs-extractor-subagent** - Schemas, ORM classes, DTOs
-- **unravel:user-stories-extractor-subagent** - Controllers, routes, event handlers
-- **unravel:security-nfrs-extractor-subagent** - Middleware, auth, logging
-- **unravel:integrations-extractor-subagent** - HTTP calls, APIs, env vars
-
-- **unravel:artifact-extractor** (existing, via agents/artifact-extractor.md)
-  - Deep extraction for complex files with 10+ patterns
-  - Handles large-scale analysis tasks
-  - Produces comprehensive output documentation
-
-### When Agents Are Used
-
-**Extraction Subagents:**
-- Always dispatched by extraction skills
-- Single file = single subagent
-- Multiple files within same category = sequential subagent dispatch
-- Fresh context per extraction (no pollution)
-
-**Reviewer Agents:**
-- Always dispatched after extraction (two-stage review)
-- Stage 1: spec-compliance-reviewer (completeness check)
-- Stage 2: quality-reviewer (accuracy check)
-- Required for every extraction
+**Parallel when possible:** Workers run independently, then merge

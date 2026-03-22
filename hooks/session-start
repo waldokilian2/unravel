@@ -4,7 +4,38 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-using_unravel_content=$(cat "${PLUGIN_ROOT}/skills/using-unravel/SKILL.md" 2>&1 || echo "Error reading skill")
+# Lightweight context - just the essentials
+LIGHTWEIGHT_CONTEXT="# Unravel Plugin Loaded
+
+Unravel extracts business artifacts from code automatically.
+
+## Available Commands
+
+- \"Extract business rules from [files]\" - Extract conditional logic, validation, exceptions
+- \"Extract process flows from [files]\" - Extract function chains, state machines, workflows
+- \"Extract data specs from [files]\" - Extract schemas, ORMs, DTOs, interfaces
+- \"Extract user stories from [files]\" - Extract controllers, routes, endpoints
+- \"Extract security/nfrs from [files]\" - Extract middleware, auth, logging, rate limiting
+- \"Extract integrations from [files]\" - Extract HTTP calls, APIs, env vars, webhooks
+
+## When to Use
+
+Use Unravel when analyzing codebases for:
+- Business rule documentation
+- Process flow mapping
+- Data specification discovery
+- User story generation
+- Security audit
+- Dependency analysis
+
+## Architecture
+
+**Simple path (< 10 files):** Uses unravel-extractor (single agent, extract + self-verify)
+
+**Complex path (10+ files):** Uses unravel-orchestrator → parallel workers → unravel-merger
+
+All outputs saved to: docs/output/
+"
 
 escape_for_json() {
     local s="$1"
@@ -16,8 +47,8 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-using_escaped=$(escape_for_json "$using_unravel_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have Unravel superpowers.\n\n**Below is the full content of your 'unravel:using-unravel' skill:**\n\n${using_escaped}\n</EXTREMELY_IMPORTANT>"
+context_escaped=$(escape_for_json "$LIGHTWEIGHT_CONTEXT")
+session_context="<system-reminder>\n${context_escaped}\n</system-reminder>"
 
 cat <<EOF
 {

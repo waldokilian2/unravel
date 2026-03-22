@@ -44,11 +44,25 @@ All extracted artifacts are saved to `docs/output/`:
 - security-nfrs.md
 - integrations.md
 
-### Verification
+## How It Works
 
-After extraction, verify accuracy:
+Unravel uses a smart path-selection architecture:
 
+**Simple Path (< 10 files):** Fast, single-pass extraction
 ```
-You: Verify the business rules output
-Claude: [dispatches verification-agent]
+User → unravel-extractor → Output
 ```
+
+**Complex Path (10+ files):** Parallel extraction with independent verification
+```
+User → unravel-orchestrator → (parallel workers) → (parallel verifiers) → unravel-merger → Output
+```
+
+### Agents
+
+| Agent | Purpose |
+|-------|---------|
+| **unravel-extractor** | Extract patterns from files |
+| **unravel-orchestrator** | Coordinate workers, verifiers, and merger for large tasks |
+| **unravel-verifier** | Independently verify extraction outputs |
+| **unravel-merger** | Combine verified outputs into final file |

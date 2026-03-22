@@ -1,46 +1,21 @@
 ---
 name: extract-process-flows
-description: Use when analyzing code for function call sequences, state machine transitions, or workflow orchestrators. Automatically triggers on: function call chains, state transitions, workflow definitions, async/await sequences, promise chains.
+description: Domain knowledge for extracting process flows - function call sequences, state machines, workflows
 ---
 
-# Extracting Process Flows
+# Process Flows Extraction
 
-## Overview
-Map process flows by identifying function call stacks, state machine transitions, and workflow orchestrators to understand how data and control flow through the system.
+Domain knowledge for extracting process flows from code.
 
-## When to Use
-Use when analyzing code for function call sequences, state machine transitions, or workflow orchestrators. Triggers on:
-- Function call chains (especially with await)
-- State machine implementations
-- Workflow orchestrators
-- Async/await sequences
-- Promise chains
+## What to Extract
 
-## Always Use Orchestration
+Process flows show how data and control move through the system:
 
-This skill **always** orchestrates subagent execution. Even for single-file extractions, a fresh subagent is dispatched.
-
-**Why?**
-- Fresh context per extraction (no pollution)
-- Consistent review process (two-stage: spec → quality)
-- Parallelizable by design
-- Matches Superpowers' subagent-driven-development pattern
-
-**How it works:**
-1. You (orchestrator) analyze scope and identify files
-2. Dispatch process-flows-extractor-subagent tasks sequentially
-3. For each completed task: run spec compliance review → quality review
-4. Output is accumulated in docs/output/process-flows.md
-
-## Core Principle
-**Trace-first: Follow the execution path from entry point to completion**
-
-## Checklist
-
-1. **Hotspot Discovery** - Find files with flow patterns
-2. **Trace** - Follow function call chains
-3. **Document** - Write to docs/output/process-flows.md
-4. **Verify** - Confirm flows are complete
+- **Function call chains** - Especially with await, sequential calls
+- **State machine implementations** - State transitions, state changes
+- **Workflow orchestrators** - Step-by-step processes
+- **Async/await sequences** - Promise chains, async flows
+- **Event-driven flows** - Event handlers, subscribers, listeners
 
 ## Hotspot Discovery
 
@@ -53,123 +28,50 @@ grep -r "state\|transition\|StateMachine" --include="*.ts" -l | head -20
 
 # Find workflow definitions
 grep -r "workflow\|orchestrat\|step\|pipeline" --include="*.ts" -l | head -20
-```
 
-Exclude generated code:
-```bash
---exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build --exclude-dir=.next
+# Find promise chains
+grep -r "\.then(" --include="*.ts" --include="*.js" -l | head -20
 ```
 
 ## Pattern Signals
 
-| Pattern | Example | Process Flow |
-|---------|---------|---------------|
-| Async chain | `await validateUser(); await createUser();` | Registration flow |
-| State machine | `transitionTo('processing')` | State transition |
-| Orchestrator | `step1(); step2(); step3();` | Sequential workflow |
-| Promise chain | `fetch().then().then()` | Async pipeline |
-| Event handler | `on('click', handleClick)` | Event-driven flow |
+| Code Pattern | Process Flow |
+|--------------|--------------|
+| `await validateUser(); await createUser();` | Registration: validateUser() → createUser() |
+| `transitionTo('processing')` | State transition: pending → processing |
+| `step1(); step2(); step3();` | Sequential workflow: step1 → step2 → step3 |
+| `fetch().then().then()` | Async pipeline: fetch → then → then |
+| `on('click', handleClick)` | Event-driven flow: click → handleClick |
+| `states: ['pending', 'processing', 'done']` | State machine with 3 states |
 
 ## Output Format
 
 ```markdown
 ## Process Flows
 
-Extraction: 2025-03-17
+Extraction: [YYYY-MM-DD]
 
-### User Registration
-1. validateInput() → createUser() → sendWelcomeEmail()
-   Source: src/auth/registration.ts:45-67
+### [Flow Name]
+1. [step1]() → [step2]() → [step3]()
+   Source: [file:line-range]
 
-### Payment Processing
-1. validatePayment() → chargeCard() → updateOrder() → sendReceipt()
-   Source: src/payment/process.ts:12-45
+### [State Machine Name]
+States: `[state1]` → `[state2]` → `[state3]`
+Transitions: [file:line-range]
 
-### Order State Machine
-States: `pending` → `processing` → `shipped` → `delivered`
-Source: src/orders/StateMachine.ts:10-25
+### [Event-Driven Flow]
+Trigger: [event]
+Handler: [function]
+Flow: [step1]() → [step2]()
+Source: [file:line-range]
 ```
 
-## Token Efficiency
-- Trace one level deep unless complex workflow
-- Use numbered lists for sequences
-- Only read files that match hotspot patterns
-- Extract flow summaries, not full implementations
-- If 50+ flows found, suggest analyzing by module
+## Core Principles
 
-## Edge Cases
-- **No patterns found**: "No process flows detected. Check: are you in the right directory?"
-- **Too many patterns**: "Large codebase detected. Analyzing module-by-module..."
-- **Circular dependencies**: Flag as "CIRCULAR: X calls Y which calls X"
-- **Complex branching**: Extract with note "[COMPLEX: Multiple paths, verify coverage]"
-- **Dynamic dispatch**: Extract with note "[DYNAMIC: Runtime-determined call path]"
+**Trace-first:** Follow the execution path from entry point to completion
 
-## Red Flags
+**One level deep:** Trace at least one function call deep
 
-**Never:**
-- Assume execution order without tracing
-- Extract flow without reading actual implementation
-- Skip error handling paths
-- Ignore state machine transitions
-- Document inferred flows without source verification
+**Include errors:** Don't skip error/exception paths
 
-**Always:**
-- Follow actual execution paths (read the code)
-- Include error/exception paths in flows
-- Document state transitions explicitly
-- Trace at least one level deep
-- Include source locations for each flow step
-
-## Task Dispatching
-
-**Single file:**
-```
-Agent("Extract process flows from payment.ts")
-
-Subagent receives:
-- File: payment.ts
-- Artifact type: process-flows
-- Output: docs/output/process-flows.md
-```
-
-**Multiple files (sequential):**
-```
-Agent("Extract process flows from auth module")
-→ Wait for completion →
-Agent("Extract process flows from payment module")
-→ Wait for completion →
-Agent("Extract process flows from user module")
-→ Wait for completion
-```
-
-## Two-Stage Review (Required)
-
-After each subagent completes:
-
-**Stage 1: Spec Compliance Review**
-```
-Task("Review spec compliance for process flows extraction")
-- All flows in scope extracted?
-- No artifacts outside scope?
-- Output format followed?
-```
-
-**Stage 2: Quality Review** (only after Stage 1 passes)
-```
-Task("Review quality for process flows extraction")
-- Each flow matches actual code?
-- No hallucinations?
-- Clear, well-documented?
-```
-
-## Integration
-
-**Required subagents:**
-- unravel:process-flows-extractor-subagent - Focused extraction
-- unravel:spec-compliance-reviewer - Stage 1 review
-- unravel:quality-reviewer - Stage 2 review
-
-**For large tasks (10+ flows, 5+ files):**
-- Use unravel:orchestrating-extractions for full orchestration
-- Use unravel:dispatching-sequential-extractors for sequential execution within category
-- Use unravel:planning-extractions to create task plans
+**Source locations:** Include file:line-range for each flow step
