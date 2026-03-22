@@ -39,14 +39,14 @@ Read the corresponding skill for hotspot patterns:
 **If file count >= 10:**
 ```
 → Split into logical modules (by directory/feature)
-→ Launch workers in PARALLEL
+→ Launch workers SEQUENTIALLY (one at a time)
 → For each worker: launch verifier when worker completes
 → When all verifiers pass: launch merger
 ```
 
 ## Complex Path Coordination
 
-### Phase 1: Launch Workers (Parallel)
+### Phase 1: Launch Workers (Sequential)
 
 For each module, launch an Agent:
 ```
@@ -57,9 +57,9 @@ Agent(unravel-extractor,
       Output: docs/output/[artifact-type].[module-name].tmp.md")
 ```
 
-**Launch all workers in parallel** - do not wait for each to complete.
+**Launch workers SEQUENTIALLY** - wait for each to complete before launching the next.
 
-### Phase 2: Verify Each Output (Parallel)
+### Phase 2: Verify Each Output (Sequential)
 
 For each temp file created, launch a verifier:
 ```
@@ -70,7 +70,7 @@ Agent(unravel-verifier,
       Artifact Type: [artifact-type]")
 ```
 
-**Launch verifiers in parallel** as workers complete.
+**Launch verifiers SEQUENTIALLY** as workers complete.
 
 ### Phase 3: Merge (After All Verifications Pass)
 
@@ -139,7 +139,7 @@ Merger: Pending (awaiting all verifications)
 
 **Count first:** Always count files before deciding path
 
-**Parallel execution:** Workers run in parallel, verifiers run in parallel
+**Sequential execution:** Workers run one at a time, verifiers run one at a time
 
 **Independent verification:** Each temp file is verified before merge
 
