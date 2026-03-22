@@ -171,13 +171,13 @@ All extractions complete! Would you like me to create an executive summary?
 **Use for:** 10+ files, codebase-wide analysis
 **Process:**
 1. Count files with patterns
-2. Ask user: parallel or sequential execution
-3. If < 10: use unravel-extractor
-4. If >= 10: split into modules, launch workers per user's choice
-5. Launch verifiers for each temp file
-6. When all verifiers pass: launch unravel-merger
+2. If < 10: use unravel-extractor
+3. If >= 10: split into modules, launch workers SEQUENTIALLY (one at a time)
+4. Launch verifiers SEQUENTIALLY as workers complete
+5. When all verifiers pass: launch unravel-merger
 
 **IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple orchestrators.
+**Execution:** Always sequential internally (workers and verifiers one at a time).
 
 ### unravel-verifier
 **Purpose:** Independently verify extraction outputs
