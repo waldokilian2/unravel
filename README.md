@@ -113,7 +113,8 @@ All extracted artifacts are saved to `docs/output/`:
 
 ### Execution Model
 
-- **Sequential execution:** Workers and verifiers run one at a time
+- **Orchestrators always run sequential internally:** Workers and verifiers run one at a time
+- **Multiple orchestrators:** When extracting multiple artifact types, user chooses parallel or sequential
 - **One artifact type per orchestrator:** Multiple types = multiple orchestrators
 - **Independent verification:** Each module's output is verified before merging
 - **Fail-fast:** Stops on errors, doesn't merge partial/bad results

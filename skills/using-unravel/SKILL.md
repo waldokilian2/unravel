@@ -34,26 +34,24 @@ Extracts and documents:
               │                               │
     ┌─────────▼─────────┐           ┌─────────▼─────────┐
     │  unravel-extractor│           │ unravel-orchestrator│
-    │  (single-pass)    │           │  (ask user choice) │
-    │                   │           └─────────┬─────────┘
-    │  • Extract        │                     │
-    │  • Self-verify    │         User choice: Parallel or Sequential?
-    │  • Output         │                     │
-    └───────────────────┘         ┌───────────┼───────────┐
-                                 │           │           │
+    │  (single-pass)    │           │  (always sequential │
+    │                   │           │   internally)       │
+    │  • Extract        │           └─────────┬─────────┘
+    │  • Self-verify    │                     │
+    │  • Output         │         ┌───────────┼───────────┐
+    └───────────────────┘         │           │           │
                             ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
                             |Worker 1|  |Worker 2|  |Worker 3|
                             |Extract │  |Extract │  |Extract │
                             └────┬───┘  └───┬───┘  └───┬───┘
                                  │         │         │
+                              Sequential (one at a time)
+                                 │         │         │
+                            ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
+                            |Verif.1 │  |Verif.2 │  |Verif.3 │
+                            └────┬───┘  └───┬───┘  └───┬───┘
+                                 │         │         │
                                  └─────────┼─────────┘
-                                           │
-                            ┌──────────────▼──────────────┐
-                            │  unravel-verifier (×3)       │
-                            │  • Accuracy                  │
-                            │  • Completeness              │
-                            │  • Boundaries                │
-                            └──────────────┬───────────────┘
                                            │
                             ┌──────────────▼──────────────┐
                             │  unravel-merger              │
@@ -65,6 +63,9 @@ Extracts and documents:
                             │  unravel-summarizer (optional)│
                             │  • Executive summary         │
                             └───────────────────────────────┘
+
+Multiple orchestrators can run in parallel (user choice),
+but each orchestrator is always sequential internally.
 ```
 
 ## When to Use Unravel
@@ -96,15 +97,14 @@ Select one or more:
 □ Integrations - HTTP calls, APIs, env vars, external services
 ```
 
-**Step 2: For large codebases (10+ files), ask execution preference**
+**Step 2: For multiple artifact types, ask execution preference**
 
+If user selected more than one artifact type:
 ```
-You have [N] modules to process. How should they run?
+You selected [N] artifact types to extract. How should the orchestrators run?
 
-□ Parallel - Faster, but check your model's concurrency limit
+□ Parallel - Faster, but check your model's concurrency limit (usually 3)
 □ Sequential - Slower, but no concurrency concerns
-
-[Your model typically supports 3 parallel agents]
 ```
 
 **Direct invocation:**
@@ -122,20 +122,27 @@ Claude: [detects pattern → uses unravel-extractor for business-rules]
 **Large codebase (single artifact type):**
 ```
 You: Analyze business rules across the entire payment system
-Claude: [asks parallel vs sequential, then uses unravel-orchestrator]
+Claude: [uses unravel-orchestrator with sequential internal execution]
 ```
 
 **Large codebase (multiple artifact types):**
 ```
 You: Analyze everything about the payment system
-Claude: [presents selection, then launches SEPARATE orchestrators]
+Claude: [presents selection, then asks about orchestrator execution]
+
+You selected [N] artifact types. How should the orchestrators run?
+□ Parallel - Faster, but check your model's concurrency limit (usually 3)
+□ Sequential - Slower, but no concurrency concerns
+
+[Then launches SEPARATE orchestrators per user's choice]
   → orchestrator for business-rules
   → orchestrator for process-flows
   → orchestrator for data-specs
   → orchestrator for user-stories
   → orchestrator for security-nfrs
   → orchestrator for integrations
-Each orchestrator runs independently and produces its own output file.
+
+Each orchestrator runs independently with sequential internal execution.
 ```
 
 **Step 3: Offer executive summary**
