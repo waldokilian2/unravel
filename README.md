@@ -33,6 +33,21 @@ You can also invoke specific skills:
 You: Use extract-data-specs to analyze the models
 ```
 
+### Large Codebases
+
+For large codebases, Unravel automatically splits work into parallel modules. Each artifact type is extracted independently:
+
+```
+You: Analyze the entire payment system
+Claude: [launches parallel extraction for each artifact type]
+  → business-rules extraction
+  → process-flows extraction
+  → data-specs extraction
+  → user-stories extraction
+  → security-nfrs extraction
+  → integrations extraction
+```
+
 ### Output
 
 All extracted artifacts are saved to `docs/output/`:

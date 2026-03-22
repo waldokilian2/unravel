@@ -77,10 +77,23 @@ You: What are the validation rules in this code?
 Claude: [detects pattern → uses unravel-extractor for business-rules]
 ```
 
-**Large codebase:**
+**Large codebase (single artifact type):**
 ```
-You: Analyze the entire payment system
-Claude: [uses unravel-orchestrator → parallel workers → unravel-merger]
+You: Analyze business rules across the entire payment system
+Claude: [uses unravel-orchestrator → parallel workers → verifiers → unravel-merger]
+```
+
+**Large codebase (multiple artifact types):**
+```
+You: Analyze everything about the payment system
+Claude: [launches SEPARATE orchestrators in parallel]
+  → orchestrator for business-rules
+  → orchestrator for process-flows
+  → orchestrator for data-specs
+  → orchestrator for user-stories
+  → orchestrator for security-nfrs
+  → orchestrator for integrations
+Each orchestrator runs independently and produces its own output file.
 ```
 
 ## Agents
@@ -102,7 +115,19 @@ Claude: [uses unravel-orchestrator → parallel workers → unravel-merger]
 2. If < 10: use unravel-extractor
 3. If >= 10: split into modules, launch parallel workers
 4. Each worker outputs to temp file
-5. Launch unravel-merger
+5. Launch verifiers for each temp file (parallel)
+6. When all verifiers pass: launch unravel-merger
+
+**IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple orchestrators.
+
+### unravel-verifier
+**Purpose:** Independently verify extraction outputs
+**Use for:** After each worker completes (orchestrator dispatches)
+**Process:**
+1. Read extraction output
+2. Cross-check against source code
+3. Verify accuracy, completeness, boundaries
+4. Report PASSED or FAILED
 
 ### unravel-merger
 **Purpose:** Combine parallel outputs and verify
