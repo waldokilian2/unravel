@@ -29,27 +29,42 @@ Extracts and documents:
          ┌────▼─────┐                   ┌────▼─────┐
          │  Simple  │                   │  Complex │
          │  Path    │                   │  Path    │
+         │ (<10)    │                   │ (10+)    │
          └────┬─────┘                   └────┬─────┘
               │                               │
     ┌─────────▼─────────┐           ┌─────────▼─────────┐
     │  unravel-extractor│           │ unravel-orchestrator│
-    │  (single-pass)    │           │  (dispatch only)  │
+    │  (single-pass)    │           │  (ask user choice) │
     │                   │           └─────────┬─────────┘
     │  • Extract        │                     │
-    │  • Self-verify    │         ┌───────────┼───────────┐
-    │  • Output         │         │           │           │
-    └───────────────────┘    ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
-                             |Worker 1|  |Worker 2|  |Worker 3|
-                             |Extract │  |Extract │  |Extract │
-                             └────┬───┘  └───┬───┘  └───┬───┘
-                                  │         │         │
-                                  └─────────┼─────────┘
-                                            │
-                                  ┌─────────▼─────────┐
-                                  │  unravel-merger   │
-                                  │  (combine + verify│
-                                  │   aggregate)      │
-                                  └───────────────────┘
+    │  • Self-verify    │         User choice: Parallel or Sequential?
+    │  • Output         │                     │
+    └───────────────────┘         ┌───────────┼───────────┐
+                                 │           │           │
+                            ┌────▼───┐  ┌───▼───┐  ┌───▼───┐
+                            |Worker 1|  |Worker 2|  |Worker 3|
+                            |Extract │  |Extract │  |Extract │
+                            └────┬───┘  └───┬───┘  └───┬───┘
+                                 │         │         │
+                                 └─────────┼─────────┘
+                                           │
+                            ┌──────────────▼──────────────┐
+                            │  unravel-verifier (×3)       │
+                            │  • Accuracy                  │
+                            │  • Completeness              │
+                            │  • Boundaries                │
+                            └──────────────┬───────────────┘
+                                           │
+                            ┌──────────────▼──────────────┐
+                            │  unravel-merger              │
+                            │  • Combine outputs           │
+                            │  • Cleanup temp files        │
+                            └──────────────┬───────────────┘
+                                           │
+                            ┌──────────────▼──────────────┐
+                            │  unravel-summarizer (optional)│
+                            │  • Executive summary         │
+                            └───────────────────────────────┘
 ```
 
 ## When to Use Unravel
@@ -65,7 +80,7 @@ Extracts and documents:
 
 ## How to Invoke
 
-**IMPORTANT: Always ask user to select artifact type(s) before proceeding.**
+**Step 1: Ask user to select artifact type(s)**
 
 When the user asks to analyze or extract from code, present this selection:
 
@@ -81,7 +96,16 @@ Select one or more:
 □ Integrations - HTTP calls, APIs, env vars, external services
 ```
 
-Then proceed with extraction based on their selection.
+**Step 2: For large codebases (10+ files), ask execution preference**
+
+```
+You have [N] modules to process. How should they run?
+
+□ Parallel - Faster, but check your model's concurrency limit
+□ Sequential - Slower, but no concurrency concerns
+
+[Your model typically supports 3 parallel agents]
+```
 
 **Direct invocation:**
 ```
@@ -98,13 +122,13 @@ Claude: [detects pattern → uses unravel-extractor for business-rules]
 **Large codebase (single artifact type):**
 ```
 You: Analyze business rules across the entire payment system
-Claude: [uses unravel-orchestrator → parallel workers → verifiers → unravel-merger]
+Claude: [asks parallel vs sequential, then uses unravel-orchestrator]
 ```
 
 **Large codebase (multiple artifact types):**
 ```
 You: Analyze everything about the payment system
-Claude: [presents selection, then launches SEPARATE orchestrators in parallel]
+Claude: [presents selection, then launches SEPARATE orchestrators]
   → orchestrator for business-rules
   → orchestrator for process-flows
   → orchestrator for data-specs
@@ -112,6 +136,16 @@ Claude: [presents selection, then launches SEPARATE orchestrators in parallel]
   → orchestrator for security-nfrs
   → orchestrator for integrations
 Each orchestrator runs independently and produces its own output file.
+```
+
+**Step 3: Offer executive summary**
+
+After all extractions complete:
+```
+All extractions complete! Would you like me to create an executive summary?
+
+□ Yes - Create EXECUTIVE-SUMMARY.md with overview and insights
+□ No - I'm done
 ```
 
 ## Agents
@@ -126,14 +160,14 @@ Each orchestrator runs independently and produces its own output file.
 4. Output to docs/output/[type].md
 
 ### unravel-orchestrator
-**Purpose:** Dispatch parallel workers for large tasks
+**Purpose:** Coordinate workers, verifiers, and merger for large tasks
 **Use for:** 10+ files, codebase-wide analysis
 **Process:**
 1. Count files with patterns
-2. If < 10: use unravel-extractor
-3. If >= 10: split into modules, launch parallel workers
-4. Each worker outputs to temp file
-5. Launch verifiers for each temp file (parallel)
+2. Ask user: parallel or sequential execution
+3. If < 10: use unravel-extractor
+4. If >= 10: split into modules, launch workers per user's choice
+5. Launch verifiers for each temp file
 6. When all verifiers pass: launch unravel-merger
 
 **IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple orchestrators.
@@ -148,14 +182,21 @@ Each orchestrator runs independently and produces its own output file.
 4. Report PASSED or FAILED
 
 ### unravel-merger
-**Purpose:** Combine parallel outputs and verify
+**Purpose:** Combine verified outputs into final file
 **Use for:** After orchestrator dispatches workers
 **Process:**
 1. Read all temp files
 2. Merge into single output
-3. Verify aggregate (completeness, quality)
-4. Cleanup temp files
-5. Output final: docs/output/[type].md
+3. Cleanup temp files
+4. Output final: docs/output/[type].md
+
+### unravel-summarizer
+**Purpose:** Create executive summary from all outputs
+**Use for:** Optional, after all extractions complete
+**Process:**
+1. Read all artifact files
+2. Analyze and synthesize key findings
+3. Create EXECUTIVE-SUMMARY.md with overview, insights, recommendations
 
 ## Output Location
 
@@ -167,8 +208,11 @@ All artifacts saved to: `docs/output/`
 - user-stories.md
 - security-nfrs.md
 - integrations.md
+- EXECUTIVE-SUMMARY.md (optional)
 
 ## Key Principles
+
+**User choice first:** Ask user to select artifact types and execution preference
 
 **Hotspot-first:** Find relevant files before reading (don't read everything)
 
@@ -178,4 +222,6 @@ All artifacts saved to: `docs/output/`
 
 **Choose the right path:** Simple for small tasks, complex for large
 
-**Parallel when possible:** Workers run independently, then merge
+**One artifact per orchestrator:** Multiple types = multiple orchestrators
+
+**Optional summary:** Offer executive summary after completion
