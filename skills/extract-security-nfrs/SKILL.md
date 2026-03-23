@@ -64,7 +64,7 @@ Files Analyzed: [N] files
 
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
-| [What's required] | [How it's implemented] | [file:line] |
+| [What's required] | [How it's implemented] | [filename.ts:42](path/to/filename.ts#L42) |
 ```
 
 **Final merged output (after merger combines all modules):**
@@ -84,12 +84,12 @@ Extraction: [YYYY-MM-DD]
 ## auth Module
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
-| JWT required | @UseGuards(JwtGuard) | src/auth/auth.controller.ts:5 |
+| JWT required | @UseGuards(JwtGuard) | [src/auth/auth.controller.ts:5](src/auth/auth.controller.ts#L5) |
 
 ## payment Module
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
-| Rate limiting | @Throttle(10, 60) | src/payment/controller.ts:3 |
+| Rate limiting | @Throttle(10, 60) | [src/payment/controller.ts:3](src/payment/controller.ts#L3) |
 ```
 
 **Example:**
@@ -99,15 +99,15 @@ Extraction: [YYYY-MM-DD]
 ### Authentication
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
-| JWT required | @UseGuards(JwtGuard) | src/auth/auth.controller.ts:5 |
-| Role-based access | @RolesAllowed('admin') | src/admin/controller.ts:8 |
-| Password hashing | bcrypt, salt rounds: 10 | src/auth/service.ts:23 |
+| JWT required | @UseGuards(JwtGuard) | [src/auth/auth.controller.ts:5](src/auth/auth.controller.ts#L5) |
+| Role-based access | @RolesAllowed('admin') | [src/admin/controller.ts:8](src/admin/controller.ts#L8) |
+| Password hashing | bcrypt, salt rounds: 10 | [src/auth/service.ts:23](src/auth/service.ts#L23) |
 
 ### Logging
 | Component | Implementation | Source |
 |-----------|----------------|--------|
-| Request logging | Winston logger | src/middleware/logger.ts:12 |
-| Error tracking | Sentry integration | src/errors/handler.ts:45 |
+| Request logging | Winston logger | [src/middleware/logger.ts:12](src/middleware/logger.ts#L12) |
+| Error tracking | Sentry integration | [src/errors/handler.ts:45](src/errors/handler.ts#L45) |
 ```
 
 ## Core Principles

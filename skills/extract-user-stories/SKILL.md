@@ -57,11 +57,11 @@ Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
 
 - As a [role], I can [action]
-  Source: [METHOD] [path] ([file:line])
+  Source: [METHOD] [path] ([filename.ts:23](path/to/filename.ts#L23))
   Implementation: [function name]
 
 - As a [role], I can [action]
-  Source: [METHOD] [path] ([file:line])
+  Source: [METHOD] [path] ([filename.ts:15](path/to/filename.ts#L15))
   Implementation: [function name]
 ```
 
@@ -81,12 +81,12 @@ Extraction: [YYYY-MM-DD]
 
 ## auth Module
 - As a user, I can register with email/password
-  Source: POST /api/auth/register (src/controllers/auth.ts:23)
+  Source: POST /api/auth/register ([src/controllers/auth.ts:23](src/controllers/auth.ts#L23))
   Implementation: register() function
 
 ## payment Module
 - As a user, I can make a payment
-  Source: POST /api/payment/charge (src/payment/controller.ts:15)
+  Source: POST /api/payment/charge ([src/payment/controller.ts:15](src/payment/controller.ts#L15))
   Implementation: charge() function
 ```
 
@@ -95,11 +95,11 @@ Extraction: [YYYY-MM-DD]
 ## auth Module
 
 - As a user, I can register with email/password
-  Source: POST /api/auth/register (src/controllers/auth.ts:23)
+  Source: POST /api/auth/register ([src/controllers/auth.ts:23](src/controllers/auth.ts#L23))
   Implementation: register() function
 
 - As an admin, I can view all users
-  Source: GET /api/admin/users (src/admin/users.ts:12)
+  Source: GET /api/admin/users ([src/admin/users.ts:12](src/admin/users.ts#L12))
   Implementation: findAll() with @RolesAllowed('admin')
 ```
 

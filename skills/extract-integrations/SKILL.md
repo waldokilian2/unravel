@@ -59,7 +59,7 @@ Files Analyzed: [N] files
 
 | Detail | Value | Source |
 |--------|-------|--------|
-| Provider | [Service name] | [file:line] |
+| Provider | [Service name] | [filename.ts:42](path/to/filename.ts#L42) |
 | Endpoint | [URL/identifier] | [env: VAR_NAME] |
 | Auth Method | [API Key/OAuth/etc] | [env: VAR_NAME] |
 ```
@@ -81,13 +81,13 @@ Extraction: [YYYY-MM-DD]
 ## payment Module
 | Detail | Value | Source |
 |--------|-------|--------|
-| Provider | Stripe | src/payment/stripe.ts:1 |
+| Provider | Stripe | [src/payment/stripe.ts:1](src/payment/stripe.ts#L1) |
 | Endpoint | https://api.stripe.com | env: STRIPE_API_URL |
 
 ## email Module
 | Detail | Value | Source |
 |--------|-------|--------|
-| Provider | SendGrid | src/email/sendgrid.ts:1 |
+| Provider | SendGrid | [src/email/sendgrid.ts:1](src/email/sendgrid.ts#L1) |
 | Endpoint | https://api.sendgrid.com | env: SENDGRID_URL |
 ```
 
@@ -98,11 +98,11 @@ Extraction: [YYYY-MM-DD]
 ### Payment Gateway
 | Detail | Value | Source |
 |--------|-------|--------|
-| Provider | Stripe | src/payment/stripe.ts:1 |
+| Provider | Stripe | [src/payment/stripe.ts:1](src/payment/stripe.ts#L1) |
 | Endpoint | https://api.stripe.com | env: STRIPE_API_URL |
 | Auth Method | API Key | env: STRIPE_API_KEY |
-| SDK | stripe@14.0.0 | package.json |
-| Webhook | POST /webhook/stripe | src/webhooks/stripe.ts:12 |
+| SDK | stripe@14.0.0 | [package.json](package.json) |
+| Webhook | POST /webhook/stripe | [src/webhooks/stripe.ts:12](src/webhooks/stripe.ts#L12) |
 ```
 
 ## Core Principles

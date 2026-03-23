@@ -64,8 +64,8 @@ Files Analyzed: [N] files
 
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| [Business constraint] | [file:line] | [How it's enforced] |
-| [Business constraint] | [file:line] | [How it's enforced] |
+| [Business constraint] | [filename.ts:42](path/to/filename.ts#L42) | [How it's enforced] |
+| [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
 ```
 
 **Final merged output (after merger combines all modules):**
@@ -85,12 +85,12 @@ Extraction: [YYYY-MM-DD]
 ## auth Module
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| [Business constraint] | [file:line] | [How it's enforced] |
+| [Business constraint] | [filename.ts:42](path/to/filename.ts#L42) | [How it's enforced] |
 
 ## payment Module
 | Rule | Source | Enforcement |
 |------|--------|-------------|
-| [Business constraint] | [file:line] | [How it's enforced] |
+| [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
 ```
 
 ## Core Principles

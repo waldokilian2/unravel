@@ -58,8 +58,8 @@ Files Analyzed: [N] files
 
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [file:line] |
-| [field name] | [data type] | [validation/rules] | [file:line] |
+| [field name] | [data type] | [validation/rules] | [filename.ts:42](path/to/filename.ts#L42) |
+| [field name] | [data type] | [validation/rules] | [filename.ts:15](path/to/filename.ts#L15) |
 ```
 
 **Final merged output (after merger combines all modules):**
@@ -79,12 +79,12 @@ Extraction: [YYYY-MM-DD]
 ## auth Module
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [file:line] |
+| [field name] | [data type] | [validation/rules] | [filename.ts:42](path/to/filename.ts#L42) |
 
 ## payment Module
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [file:line] |
+| [field name] | [data type] | [validation/rules] | [filename.ts:15](path/to/filename.ts#L15) |
 ```
 
 ## Core Principles

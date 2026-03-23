@@ -56,7 +56,7 @@ Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
 
 ### Flow: [Descriptive Name]
-**Source:** [file:line-range]
+**Source:** [filename.ts:15-30](path/to/filename.ts#L15-L30)
 
 ```mermaid
 flowchart TD
@@ -69,7 +69,7 @@ flowchart TD
 **Description:** [Brief explanation of the flow]
 
 ### State Machine: [Name]
-**Source:** [file:line-range]
+**Source:** [filename.ts:10-50](path/to/filename.ts#L10-L50)
 
 ```mermaid
 stateDiagram-v2
@@ -99,7 +99,7 @@ Extraction: [YYYY-MM-DD]
 ## auth Module
 
 ### Flow: User Registration
-**Source:** src/auth/register.ts:15-30
+**Source:** [src/auth/register.ts:15-30](src/auth/register.ts#L15-L30)
 
 ```mermaid
 flowchart TD
@@ -112,7 +112,7 @@ flowchart TD
 **Description:** New user registration flow with validation and email notification
 
 ### Flow: Password Reset
-**Source:** src/auth/password.ts:40-65
+**Source:** [src/auth/password.ts:40-65](src/auth/password.ts#L40-L65)
 
 ```mermaid
 flowchart TD
@@ -129,7 +129,7 @@ flowchart TD
 ## payment Module
 
 ### State Machine: Payment Processing
-**Source:** src/payment/processor.ts:10-50
+**Source:** [src/payment/processor.ts:10-50](src/payment/processor.ts#L10-L50)
 
 ```mermaid
 stateDiagram-v2
