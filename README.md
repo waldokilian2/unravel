@@ -35,27 +35,35 @@ You selected Business Logic. Which types?
 □ User Stories only
 ```
 
-### Step 2: Choose Execution Style (Multiple Types Only)
+**Step 2: Choose Verification Level**
 
-If you selected multiple artifact types, you'll be asked:
+After selecting artifact types, Unravel will ask about verification:
 
 ```
-You selected [N] artifact types. How should they be processed?
+Would you like independent verification of extracted artifacts?
 
-□ Sequential - Complete one type before starting the next
-□ Parallel - Process multiple types concurrently (subject to API limits)
+[✓] Yes - Run independent verifier after each extractor (most thorough, slower)
+[ ] No - Skip independent verifier (extractor self-verifies, faster)
 ```
+
+**Trade-offs:**
+- **Yes** (Independent verification): Most thorough, catches more errors, but takes longer
+- **No** (Extractor self-verification): Faster, still reliable for most cases
+
+**Note:** Extractors always self-verify their outputs. Independent verification provides an additional layer of validation by having a separate agent review the work.
 
 ### Step 3: Unravel Extracts
 
-Unravel follows a consistent extraction workflow:
+Unravel follows a consistent extraction workflow with **batched parallel execution**:
 
 ```
-User → Select type(s) → Main Agent follows orchestrating-extraction skill
-  → Spawns extractors (sequential)
-  → Spawns verifiers (sequential)
+User → Select type(s) → Choose verification → Main Agent follows orchestrating-extraction skill
+  → Spawns extractors in batches of 2 (parallel within batch)
+  → [If verification enabled] Spawns verifiers in batches of 2 (parallel within batch)
   → Spawns merger → Output
 ```
+
+**Key:** Max 3 concurrent agents (main orchestrator + 2 parallel workers)
 
 ### Example Workflow
 
@@ -82,24 +90,39 @@ Claude: You selected Business Logic. Which types?
 
        [User selects "All business logic types"]
 
-Claude: Found 47 files across 3 modules.
-       Processing business-rules with sequential execution.
+Claude: Would you like independent verification of extracted artifacts?
 
-       Module 1/3: Extracting business-rules... ✓
-       Module 1/3: Verifying business-rules... ✓
-       Module 2/3: Extracting business-rules... ✓
-       Module 2/3: Verifying business-rules... ✓
-       Module 3/3: Extracting business-rules... ✓
-       Module 3/3: Verifying business-rules... ✓
+       [✓] Yes - Run independent verifier after each extractor (most thorough, slower)
+       [ ] No - Skip independent verifier (extractor self-verifies, faster)
+
+       [User selects "Yes" for thorough verification]
+
+Claude: Found 47 files across 3 modules.
+       Processing with batched parallel execution (3-agent limit)...
+
+       Batch 1/2: Extracting business-rules from auth and payment modules... ✓
+       Batch 2/2: Extracting business-rules from user module... ✓
+
+       Batch 1/2: Verifying auth and payment modules...
+          ✓ auth module - PASSED
+          ❌ payment module - FAILED (3 issues found)
+
+       🔧 Applying surgical fixes to payment module...
+          Removed 1 hallucinated rule
+          Updated 1 wrong location
+          Augmented 1 incomplete rule
+       ✓ Re-verification PASSED
+
+       Batch 2/2: Verifying user module... ✓
        Merging outputs... ✓
 
        Output: docs/output/business-rules.md
 
        Now extracting process-flows...
-       [same process for process-flows]
+       [same batched parallel process for process-flows]
 
        Now extracting user-stories...
-       [same process for user-stories]
+       [same batched parallel process for user-stories]
 ```
 
 ### Step 4: Executive Summary (Optional)
@@ -141,52 +164,62 @@ All extracted artifacts are saved to `docs/output/`:
 │                                                             │
 │  Follows orchestrating-extraction skill                     │
 │  ┌─────────────────────────────────────────────────────┐   │
+│  │  • Loads skill content ONCE (reads each skill file)  │   │
+│  │  • Asks user for verification preference            │   │
 │  │  • Counts files & splits into modules               │   │
-│  │  • Spawns agents SEQUENTIALLY (one at a time)       │   │
+│  │  • Spawns agents in batches of 2 (parallel)         │   │
+│  │  • Embeds skill content in agent prompts            │   │
+│  │  • 3-agent limit: main + 2 parallel agents max      │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
                               │
                 ┌─────────────┴─────────────┐
                 │                           │
          Spawn Agent                    Spawn Agent
-    unravel-extractor              unravel-verifier
-      (Module 1)          ←────────→    (Module 1)
-                │                           │
-                │                           │
-         Spawn Agent                    Spawn Agent
-    unravel-extractor              unravel-verifier
-      (Module 2)          ←────────→    (Module 2)
-                │                           │
-                │                           │
-         Spawn Agent                    Spawn Agent
-    unravel-extractor              unravel-verifier
-      (Module 3)          ←────────→    (Module 3)
-                │                           │
-                └─────────────┬─────────────┘
-                              │
-                       Spawn Agent
+    unravel-extractor              unravel-extractor
+      (Module 1)                     (Module 2)
+    [Skill embedded in prompt]    [Skill embedded in prompt]
+         │                               │
+         └─────────────┬─────────────────┘
+                       │
+                [Both run in parallel]
+                       │
+                       ▼
+         [If verification enabled: Spawn verifiers in batches of 2]
+         [If verification disabled: Skip to merger]
+                       │
+                       ▼
+         [If verifier finds issues: Spawn fixer → Re-verify]
+         [If fix succeeds: Proceed to merge]
+         [If fix fails: Show manual recovery options]
+                       │
+                       ▼
+                  All modules ready
+                       │
+                       ▼
                   unravel-merger
-                              │
-                       Spawn Agent
+                       │
+                       ▼
               unravel-summarizer (optional)
 ```
 
-**Key:** The horizontal arrows (←────────→) indicate workflow sequence, not automatic spawning. The Main Agent explicitly spawns each agent: extractor completes → Main Agent spawns corresponding verifier → after all verifiers pass → Main Agent spawns merger.
+**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with fixable issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator reads each skill ONCE and embeds the content in agent prompts - eliminating redundant skill file reads. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
 
 ### Agents
 
 | Agent | Purpose |
 |-------|---------|
-| **unravel-extractor** | Extract patterns from files (per module) |
-| **unravel-verifier** | Independently verify extraction outputs |
-| **unravel-merger** | Combine verified outputs into final file |
+| **unravel-extractor** | Extract patterns from files (per module) with self-verification |
+| **unravel-verifier** | Optionally verify extraction outputs (independent agent) |
+| **unravel-fixer** | Surgically fix specific issues in extraction output (automatic) |
+| **unravel-merger** | Combine extraction outputs into final file |
 | **unravel-summarizer** | Create executive summary from all outputs |
 
 ### Skills
 
 | Skill | Purpose |
 |-------|---------|
-| **orchestrating-extraction** | Coordinate extractors, verifiers, and merger for all extractions |
+| **orchestrating-extraction** | Coordinate extractors, optional verifiers, and merger for all extractions |
 | **using-unravel** | Main guide for using Unravel |
 | **extract-business-rules** | Domain knowledge for business rules |
 | **extract-process-flows** | Domain knowledge for process flows |
@@ -198,14 +231,16 @@ All extracted artifacts are saved to `docs/output/`:
 ### Execution Model
 
 - **All agents spawned by main agent:** No nested agent spawning
-- **Sequential execution:** Extractors run one at a time, verifiers run one at a time
-- **Independent verification:** Each module's output is verified before merging
+- **Skill loading optimization:** Orchestrator reads each skill ONCE and embeds content in agent prompts (eliminates redundant skill reads)
+- **Batched parallel execution:** Extractors run in batches of 2 for optimal throughput (verifiers optional)
+- **3-agent limit:** Main orchestrator + 2 parallel agents maximum at any time
+- **Optional independent verification:** User chooses whether to run independent verifiers (extractors always self-verify)
+- **Automatic surgical fixes:** When verification fails with fixable issues, automatically apply surgical fixes and re-verify
 - **Fail-fast:** Stops on errors, doesn't merge partial/bad results
-- **One artifact type per workflow:** Multiple types = multiple complete workflows
+- **One artifact type per workflow:** Multiple types = multiple complete workflows (processed sequentially)
 
 ### Commands
 
 | Command | Purpose |
 |---------|---------|
 | **/unravel** | Start Unravel extraction |
-| **/verify** | Verify extracted artifacts |

@@ -18,14 +18,7 @@ Extract [ARTIFACT_TYPE] from [FILES] and output to `docs/output/[artifact-type].
 
 ## Extraction Process
 
-### Step 1: Get Domain Knowledge
-
-Read the relevant skill from `unravel/skills/extract-[artifact-type]/SKILL.md` to understand:
-- What patterns to extract
-- Output format
-- Hotspot discovery patterns
-
-### Step 2: Extract and Self-Verify (Combined)
+### Step 1: Extract and Self-Verify (Combined)
 
 For each file:
 1. Read the file
@@ -36,7 +29,7 @@ For each file:
    - [ ] Semantically correct interpretation
    - [ ] Matches the pattern definition
 
-### Step 3: Output
+### Step 2: Output
 
 Create `docs/output/[artifact-type].[module-name].tmp.md` with the skill's output format.
 
@@ -50,35 +43,20 @@ Files Analyzed: [N] files
 [Skill-specific output format follows]
 ```
 
-## Domain Knowledge Reference
+## Domain Knowledge
 
-### Business Rules
-- **Patterns:** if/else, guard clauses, validation decorators, exception throwing, regex, assertions
-- **Output:** Table with Rule | Source | Enforcement
+**IMPORTANT:** The orchestrator provides domain knowledge in your prompt. You do NOT need to read skills yourself.
 
-### Process Flows
-- **Patterns:** Function call chains, state machines, workflows, async/await sequences, event handlers
-- **Output:** Numbered flows with source file:line-range
+Your prompt includes:
+- **What to Extract** - Pattern definitions for your artifact type
+- **Hotspot Discovery** - File discovery patterns
+- **Output Format** - Expected output structure
+- **Core Principles** - Extraction guidelines
 
-### Data Specs
-- **Patterns:** ORM classes, schemas, DTOs, interfaces, validation annotations
-- **Output:** Table with Field | Type | Constraints | Source
-
-### User Stories
-- **Patterns:** Controllers, routes, endpoints, event handlers, CLI commands
-- **Output:** "As a [role], I can [action]" with method, path, source
-
-### Security/NFRs
-- **Patterns:** Middleware, auth guards, rate limiting, logging, error handling, caching
-- **Output:** Table with Requirement | Implementation | Source
-
-### Integrations
-- **Patterns:** HTTP calls, API clients, env vars, webhooks, message queues
-- **Output:** Table with Detail | Value | Source
+Use this embedded knowledge to guide your extraction.
 
 ## Available Tools
 
-- **Skill** - Read extraction skill for domain knowledge
 - **Grep** - Search for patterns in files
 - **Glob** - Find files matching patterns
 - **Read** - Read file contents
@@ -105,3 +83,5 @@ Verification: Self-verified during extraction
 **No hallucinations:** Only extract what exists in the code
 
 **Module-based output:** Output includes module name for identification during merge
+
+**Use embedded knowledge:** The orchestrator provides domain knowledge in your prompt - use it to guide extraction
