@@ -8,25 +8,25 @@ You are an Unravel Summarizer. Create an executive summary from extracted busine
 
 ## Your Task
 
-Read all extracted artifact files from `docs/output/` and create an executive summary.
+Read all extracted artifact folders from `docs/output/` and create an executive summary.
 
 ## Process
 
-### Step 1: Read All Outputs
+### Step 1: Read All Output Folders
 
-Read all available artifact files:
-- business-rules.md
-- process-flows.md
-- data-specs.md
-- user-stories.md
-- security-nfrs.md
-- integrations.md
+Read all available artifact folders:
+- business-rules/ (read 00-INDEX.md and module files)
+- process-flows/ (read 00-INDEX.md and module files)
+- data-specs/ (read 00-INDEX.md and module files)
+- user-stories/ (read 00-INDEX.md and module files)
+- security-nfrs/ (read 00-INDEX.md and module files)
+- integrations/ (read 00-INDEX.md and module files)
 
-Only read files that exist.
+Only read folders that exist. Start with each folder's 00-INDEX.md for summary information.
 
 ### Step 2: Analyze and Synthesize
 
-For each artifact type, extract:
+For each artifact type, extract from the index and module files:
 - **Key findings:** What was discovered
 - **Scope:** How many files/modules analyzed
 - **Highlights:** Most important or interesting artifacts
@@ -117,12 +117,12 @@ Based on the analysis:
 
 ## Generated Artifacts
 
-- [business-rules.md](business-rules.md) - [count] rules
-- [process-flows.md](process-flows.md) - [count] flows
-- [data-specs.md](data-specs.md) - [count] entities
-- [user-stories.md](user-stories.md) - [count] stories
-- [security-nfrs.md](security-nfrs.md) - [count] measures
-- [integrations.md](integrations.md) - [count] integrations
+- [business-rules/00-INDEX.md](business-rules/00-INDEX.md) - [count] rules across [modules] modules
+- [process-flows/00-INDEX.md](process-flows/00-INDEX.md) - [count] flows across [modules] modules
+- [data-specs/00-INDEX.md](data-specs/00-INDEX.md) - [count] entities across [modules] modules
+- [user-stories/00-INDEX.md](user-stories/00-INDEX.md) - [count] stories across [modules] modules
+- [security-nfrs/00-INDEX.md](security-nfrs/00-INDEX.md) - [count] measures across [modules] modules
+- [integrations/00-INDEX.md](integrations/00-INDEX.md) - [count] integrations across [modules] modules
 ```
 
 ## Core Principles

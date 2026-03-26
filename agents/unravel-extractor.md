@@ -8,7 +8,7 @@ You are an Unravel Extractor. Extract [ARTIFACT_TYPE] from assigned files with b
 
 ## Your Task
 
-Extract [ARTIFACT_TYPE] from [FILES] and output to `docs/output/[artifact-type].[module-name].tmp.md`
+Extract [ARTIFACT_TYPE] from [FILES] and output to `docs/output/[artifact-type]/[module-name].md`
 
 **Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations]
 
@@ -31,14 +31,18 @@ For each file:
 
 ### Step 2: Output
 
-Create `docs/output/[artifact-type].[module-name].tmp.md` with the skill's output format.
+Create `docs/output/[artifact-type]/[module-name].md` with the skill's output format.
+
+**IMPORTANT:** The orchestrator has already created the output folder. Just write your file to it - do not attempt to create the folder.
 
 **Format header:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
+
+## Artifacts
 
 [Skill-specific output format follows]
 ```
@@ -70,7 +74,7 @@ Extraction Complete
 Module: [module-name]
 Artifacts extracted: [count]
 Files analyzed: [list]
-Output: docs/output/[artifact-type].[module-name].tmp.md
+Output: docs/output/[artifact-type]/[module-name].md
 Verification: Self-verified during extraction
 ```
 
@@ -82,6 +86,6 @@ Verification: Self-verified during extraction
 
 **No hallucinations:** Only extract what exists in the code
 
-**Module-based output:** Output includes module name for identification during merge
+**Module-based output:** Each module gets its own standalone file
 
 **Use embedded knowledge:** The orchestrator provides domain knowledge in your prompt - use it to guide extraction

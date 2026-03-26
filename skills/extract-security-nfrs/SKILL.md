@@ -53,44 +53,21 @@ grep -r "cache\|redis\|@Cacheable" --include="*.ts" --include="*.js" -l | head -
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Security & Non-Functional Requirements` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
+
+## Artifacts
 
 | Requirement | Implementation | Source |
 |-------------|----------------|--------|
 | [What's required] | [How it's implemented] | [filename.ts:42](path/to/filename.ts#L42) |
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# Security & Non-Functional Requirements
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## auth Module
-| Requirement | Implementation | Source |
-|-------------|----------------|--------|
-| JWT required | @UseGuards(JwtGuard) | [src/auth/auth.controller.ts:5](src/auth/auth.controller.ts#L5) |
-
-## payment Module
-| Requirement | Implementation | Source |
-|-------------|----------------|--------|
-| Rate limiting | @Throttle(10, 60) | [src/payment/controller.ts:3](src/payment/controller.ts#L3) |
-```
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 
 **Example:**
 ```markdown

@@ -1,18 +1,18 @@
 ---
 name: orchestrating-extraction
-description: Orchestrate parallel extractors and verifiers with 3-agent limit, then merger
+description: Orchestrate parallel extractors and verifiers with 3-agent limit, then create index
 ---
 
 # Orchestrating Extraction
 
-You are orchestrating an Unravel extraction. Coordinate extractors, verifiers, and merger.
+You are orchestrating an Unravel extraction. Coordinate extractors, verifiers, and index creation.
 
 **Execution model:** Run up to 2 extractors/verifiers in parallel (3-agent limit: main orchestrator + 2 parallel agents).
 **Note:** Multiple artifact types are processed sequentially (one complete workflow per type).
 
 ## Your Task
 
-Analyze the extraction request and coordinate extractors, verifiers, and merger.
+Analyze the extraction request and coordinate extractors, verifiers, and index creation.
 
 **IMPORTANT: You handle ONE artifact type at a time.** If asked for multiple artifact types, handle them one at a time with complete workflows per type.
 
@@ -70,7 +70,7 @@ Would you like independent verification of extracted artifacts?
 - Complex or unfamiliar codebases
 - Audit or documentation requiring thorough validation
 
-### Step 2: Count Files, Discover, and Split into Modules
+### Step 2: Count Files, Discover, Create Output Folder, and Split into Modules
 
 **File discovery is the orchestrator's responsibility:** You use Glob/Grep to find all relevant files, then pass specific file paths to each extractor.
 
@@ -78,7 +78,14 @@ Would you like independent verification of extracted artifacts?
 
 2. Use Glob/Grep with those patterns to find all relevant files in the codebase
 
-3. Split discovered files into logical modules (by directory/feature)
+3. **Create output folder using Bash:**
+   ```
+   mkdir -p "docs/output/[artifact-type]/"
+   ```
+
+4. Split discovered files into logical modules (by directory/feature)
+
+**Note:** The folder is created once here. All subsequent agents are informed the folder exists.
 
 **Module Naming Convention:**
 
@@ -88,6 +95,14 @@ Would you like independent verification of extracted artifacts?
 | Nested directories | Last directory name | `src/payment/processing` → `processing` |
 | Files across features | Primary feature name | `auth.ts, user.ts` → `auth` |
 | Mixed/unclear | Numbered | `module-1`, `module-2`, etc. |
+
+**Output folder structure:**
+```
+docs/output/[artifact-type]/
+├── 00-INDEX.md        ← Created in Step 5
+├── [module-name].md   ← One file per module
+└── [module-name].md
+```
 
 **Examples:**
 ```
@@ -101,7 +116,8 @@ src/
     paypal.ts
 
 → Modules: auth, payment
-→ Outputs: business-rules.auth.tmp.md, business-rules.payment.tmp.md
+→ Output folder: docs/output/business-rules/
+→ Module files: auth.md, payment.md
 
 Example 2: Nested directories
 src/
@@ -114,7 +130,8 @@ src/
       bank.ts
 
 → Modules: processing, methods
-→ Outputs: business-rules.processing.tmp.md, business-rules.methods.tmp.md
+→ Output folder: docs/output/business-rules/
+→ Module files: processing.md, methods.md
 ```
 
 If only one module or few files, treat as a single module named after the primary directory or `main`.
@@ -148,7 +165,9 @@ for i in range(0, len(modules), batch_size):
                         Artifact Type: [artifact-type]
                         Module Name: [module-name]
                         Files: [specific file paths]
-                        Output: docs/output/[artifact-type].[module-name].tmp.md
+                        Output: docs/output/[artifact-type]/[module-name].md
+
+                        **NOTE:** The output folder already exists. Just write your file to it.
 
                         **INSTRUCTIONS:**
                         Use the domain knowledge above to extract [artifact-type] patterns.
@@ -179,27 +198,27 @@ The verification phase consists of three subprocesses. Execute them sequentially
 
 **If user chose "No" (skip independent verification):**
 - Skip this entire verification phase
-- Proceed directly to Step 5 (Merge)
-- All temp files are considered ready for merging
+- Proceed directly to Step 5 (Create Index)
+- All module files are considered ready
 
 **If user chose "Yes" (run independent verification):**
 
-For each temp file created, launch verifiers in batches of 2 (max 2 concurrent agents).
+For each module file created, launch verifiers in batches of 2 (max 2 concurrent agents).
 
 **CRITICAL:** Embed the skill content directly in the verifier prompt. Do NOT tell agents to use the Skill tool.
 
 **Batching pattern:**
 ```
-# Process verified outputs in batches of 2
+# Process module files in batches of 2
 batch_size = 2
 verification_results = []  # Store results for next step
 
-for i in range(0, len(temp_files), batch_size):
-    batch = temp_files[i:i+batch_size]
+for i in range(0, len(module_files), batch_size):
+    batch = module_files[i:i+batch_size]
     task_ids = []
 
     # Launch verifiers for this batch in parallel
-    for temp_file in batch:
+    for module_file in batch:
         task_id = Agent(unravel-verifier,
                        "Verify extraction output
 
@@ -209,7 +228,7 @@ for i in range(0, len(temp_files), batch_size):
                          - Output Format (to understand expected structure)
                          - Core Principles]
 
-                        Output File: [temp_file]
+                        Output File: [module_file]
                         Source Files: [files that module analyzed]
                         Artifact Type: [artifact-type]
 
@@ -229,18 +248,16 @@ for i in range(0, len(temp_files), batch_size):
 
         # Parse and store verification result for subprocess 4.2
         verification_results.append({
-            temp_file: temp_file,
+            module_file: module_file,
             status: "PASSED" if result contains "PASSED" else "FAILED",
-            issues: result.issues if result contains "FAILED" else [],
-            fixable: result contains "Fixable: true"
+            issues: result.issues if result contains "FAILED" else []
         })
 ```
 
-**Output of 4.1:** A list of verification results, one per temp file, containing:
-- `temp_file`: Path to the temporary output file
+**Output of 4.1:** A list of verification results, one per module file, containing:
+- `module_file`: Path to the module output file
 - `status`: "PASSED" or "FAILED"
 - `issues`: List of structured issues (if any)
-- `fixable`: Boolean indicating whether issues are fixable
 
 **IMPORTANT:** Launch verifiers in batches of 2 (parallel within batch, sequential between batches).
 **IMPORTANT:** Always embed the full skill content in the prompt.
@@ -249,7 +266,7 @@ for i in range(0, len(temp_files), batch_size):
 
 #### 4.2: Process Failed Verifications
 
-For each failed verification result from subprocess 4.1, apply the appropriate recovery workflow.
+For each failed verification result from subprocess 4.1, apply the surgical fix workflow.
 
 **Recovery Workflow:**
 ```
@@ -259,17 +276,17 @@ for result in verification_results:
     if result.status == "PASSED":
         continue  # No action needed
 
-    # This result failed - check if fixable
-    if result.fixable == true and result.issues is not empty:
-        # Apply surgical fix workflow
-
+    # This result failed - always apply surgical fix workflow
+    if result.issues is not empty:
         # Step 1: Launch fixer
         fix_task_id = Agent(unravel-fixer,
                            "Fix extraction output
 
-                            **Output File:** [result.temp_file]
+                            **Output File:** [result.module_file]
                             **Issues:** [result.issues]
                             **Source Files:** [files that module analyzed]
+
+                            **NOTE:** The output folder already exists. Just edit the file in place.
 
                             **INSTRUCTIONS:**
                             Apply surgical fixes to address each issue in the list.
@@ -325,7 +342,7 @@ for result in verification_results:
                                  **DOMAIN KNOWLEDGE:**
                                  [Embed the skill content here]
 
-                                 Output File: [result.temp_file]
+                                 Output File: [result.module_file]
                                  Source Files: [files that module analyzed]
                                  Artifact Type: [artifact-type]
 
@@ -346,24 +363,22 @@ for result in verification_results:
         if reverify_result contains "FAILED":
             # Surgical fix failed - add to failed modules
             failed_modules.append({
-                temp_file: result.temp_file,
-                fixable: false,
+                module_file: result.module_file,
                 issues: reverify_result.issues
             })
-        # If re-verification passed, module is ready for merge (no action needed)
+        # If re-verification passed, module is ready for index creation (no action needed)
 
     else:
-        # Not fixable or no issues parsed - add to failed modules
+        # No issues parsed - add to failed modules
         failed_modules.append({
-            temp_file: result.temp_file,
-            fixable: false,
+            module_file: result.module_file,
             issues: result.issues
         })
 ```
 
 **Output of 4.2:** A list of modules that failed verification (or re-verification after fix attempt).
 
-**IMPORTANT:** When verification fails with structured issues and fixable=true, automatically spawn fixer and re-verify (surgical fix workflow).
+**IMPORTANT:** When verification fails with structured issues, automatically spawn fixer and re-verify (surgical fix workflow).
 **IMPORTANT:** Each failed module triggers exactly one fix attempt. If re-verification fails, the module is marked for manual recovery.
 **IMPORTANT:** The fixer output must include a "Fixes:" section listing each fix applied with line numbers, action type, and description. This is extracted and passed to the re-verifier as context.
 
@@ -374,8 +389,8 @@ After processing all failed verifications in subprocess 4.2, determine the next 
 **Check the failed_modules list:**
 
 **If failed_modules is empty (all modules passed):**
-- Proceed to Step 5 (Merge)
-- All temp files are verified and ready
+- Proceed to Step 5 (Create Index)
+- All module files are verified and ready
 
 **If failed_modules has items (some modules failed):**
 - Do NOT proceed to Step 5
@@ -391,7 +406,7 @@ Failed Modules: [list from failed_modules]
 For each failed module, present:
 1. Re-run extraction for the failed module only
 2. Manually review and fix issues in the output file
-3. Skip the failed module and merge the rest (user confirmation required)
+3. Skip the failed module and create index with the rest (user confirmation required)
 
 Which option would you like for each failed module?
 ```
@@ -399,28 +414,59 @@ Which option would you like for each failed module?
 **After user recovery action:**
 - If user chose to re-extract: Restart workflow for that module (return to Step 3 for specific module)
 - If user chose manual fix: Wait for user to confirm fixes are complete, then re-run verifier (return to 4.1 for specific module)
-- If user chose to skip: Remove module from merge list, proceed to Step 5 with remaining modules
+- If user chose to skip: Remove module from index, proceed to Step 5 with remaining modules
 
-**IMPORTANT:** Do not launch the merger until all modules to be merged have passed verification (or user explicitly chose to skip failed modules).
+**IMPORTANT:** Do not create the index until all modules to be included have passed verification (or user explicitly chose to skip failed modules).
 
-### Step 5: Merge
+### Step 5: Create Index
 
-**Prerequisites for merge:**
+**Prerequisites for index creation:**
 
 **If user chose "No" (skip independent verification):**
-- Merge all temp files directly
+- Create index directly with all module files
 - No verification step needed
 
 **If user chose "Yes" (run independent verification):**
-- Only merge after Step 4.3 confirms all modules passed (or user chose to skip failed modules)
+- Only create index after Step 4.3 confirms all modules passed (or user chose to skip failed modules)
 
-**Merger invocation:**
+**Index creation:**
 
+Create `docs/output/[artifact-type]/00-INDEX.md` with the following format:
+
+```markdown
+# [Artifact Type]
+
+Extraction: [YYYY-MM-DD]
+
+## Extraction Summary
+- **Total Artifacts:** [count from all modules]
+- **Files Analyzed:** [unique file count]
+- **Modules:** [count]
+- **Verification:** Each module independently verified
+
+## Modules
+
+| Module | Artifacts | Link |
+|--------|-----------|------|
+| [module-name] | [count] | [[module-name].md](module-name.md) |
+| [module-name] | [count] | [[module-name].md](module-name.md) |
+
+---
+
+*Generated by Unravel on [timestamp]*
 ```
-Agent(unravel-merger,
-     "Merge [artifact-type] extraction
-      Temp files: docs/output/[artifact-type].*.tmp.md
-      Output: docs/output/[artifact-type].md")
+
+**Process:**
+1. Count total artifacts across all module files
+2. Count unique source files analyzed
+3. Create the index file using Write tool
+4. Report completion with summary
+
+**Report format:**
+```
+✅ Index created: docs/output/[artifact-type]/00-INDEX.md
+Modules: [count]
+Total artifacts: [count]
 ```
 
 ### Verification Recovery Examples
@@ -431,7 +477,6 @@ The following examples illustrate the verification and recovery workflow describ
 ```
 ❌ Verification FAILED for module 'payment'
 Issues found: 3
-Fixable: true
 
 🔧 Applying surgical fixes...
    Removed 1 hallucinated rule
@@ -439,14 +484,13 @@ Fixable: true
    Augmented 1 incomplete rule
 
 ✅ Re-verification PASSED for module 'payment'
-Proceeding to merge...
+Proceeding to create index...
 ```
 
 **Example 2: Surgical fix failed, manual recovery needed**
 ```
 ❌ Verification FAILED for module 'payment'
 Issues found: 5
-Fixable: true
 
 🔧 Applying surgical fixes...
    Fixed 3 issues
@@ -454,22 +498,8 @@ Fixable: true
 
 Recovery options:
 1. Re-extract payment module: Agent(unravel-extractor, "...payment...")
-2. Manually review and fix the 2 remaining issues in docs/output/business-rules.payment.tmp.md
-3. Skip payment module and merge other modules
-
-Which option would you like?
-```
-
-**Example 3: Not fixable, manual recovery needed**
-```
-❌ Verification FAILED for module 'auth'
-Issues found: 8
-Fixable: false (too many issues, suggests re-extraction)
-
-Recovery options:
-1. Re-extract auth module: Agent(unravel-extractor, "...auth...")
-2. Manually review and fix all issues in docs/output/business-rules.auth.tmp.md
-3. Skip auth module and merge other modules
+2. Manually review and fix the 2 remaining issues in docs/output/business-rules/payment.md
+3. Skip payment module and create index with other modules
 
 Which option would you like?
 ```
@@ -484,7 +514,7 @@ Agent(unravel-verifier,
         **DOMAIN KNOWLEDGE:**
         [Business rules skill content embedded here]
 
-        Output File: docs/output/business-rules.payment.tmp.md
+        Output File: docs/output/business-rules/payment.md
         Source Files: src/payment/charge.ts, src/payment/refund.ts
         Artifact Type: business-rules
 
@@ -526,35 +556,34 @@ The orchestration uses a **batched parallel approach** to maximize throughput wh
    - Repeat until all outputs verified
    - **Skipped entirely if user chose "No"**
 
-3. **Merger:** Single agent after extraction completes
+3. **Index creation:** Done by orchestrator after extraction completes
    - If user chose "Yes": runs after all verifications pass
    - If user chose "No": runs immediately after extractors complete
-   - Combines all temp files into final output
+   - Creates 00-INDEX.md with links to all module files
 
 ### Example Timeline (5 modules, with independent verification)
 
 ```
 Time →
-Extractors:  [E1+E2] → [E3+E4] → [E5]  → (all complete)
-Verifiers:                           → [V1+V2] → [V3+V4] → [V5] → (all pass)
-Merger:                                                        → [M]
+Extractors:    [E1+E2] → [E3+E4] → [E5]  → (all complete)
+Verifiers:                              → [V1+V2] → [V3+V4] → [V5] → (all pass)
+Index create:                                                          → [Orchestrator]
 ```
 
 **Example Timeline (5 modules, without independent verification):**
 
 ```
 Time →
-Extractors:  [E1+E2] → [E3+E4] → [E5]  → (all complete)
-Merger:                                    → [M]
+Extractors:    [E1+E2] → [E3+E4] → [E5]  → (all complete)
+Index create:                                    → [Orchestrator]
 ```
 
 **Legend:**
 - E1-E5: Extractors for modules 1-5
 - V1-V5: Verifiers for modules 1-5
-- M: Merger agent
 - `[E1+E2]`: Two agents running in parallel
 
-**Note:** If a verifier fails with fixable issues, a fixer agent is spawned before the merger. After fixing, the module is re-verified. If re-verification fails, manual recovery is required.
+**Note:** If a verifier fails with issues, a fixer agent is spawned before index creation. After fixing, the module is re-verified. If re-verification fails, manual recovery is required.
 
 ### Benefits of Batching
 
@@ -565,10 +594,14 @@ Merger:                                    → [M]
 
 ## Available Tools
 
+- **Bash** - Create output folder (`mkdir -p`)
 - **Grep** - Search for patterns to count files
 - **Glob** - Find files matching patterns
-- **Agent** - Dispatch extractors, verifiers, and merger
+- **Agent** - Dispatch extractors, verifiers, and fixer
+- **Write** - Create the index file
 - **Skill** - Read extraction skills ONCE at the beginning (Step 0) to embed in agent prompts
+
+**Note:** The orchestrator creates the output folder in Step 2. Agents are informed the folder exists and should write directly to it without attempting to create it.
 
 ## Report Format
 
@@ -588,7 +621,7 @@ Verification:
   ⏳ [Module B] - Verifying...
   ⏳ [Module C] - Waiting
 
-Merger: Pending (awaiting all verifications)
+Index: Pending (awaiting all verifications)
 ```
 
 ## Error Handling
@@ -596,13 +629,13 @@ Merger: Pending (awaiting all verifications)
 **If an extractor fails:**
 - Report error details
 - Don't launch verifier for that module
-- Don't launch merger
+- Don't create index
 - Ask user how to proceed
 
 **If a verifier fails:**
 - Report which module failed with specific errors
 - Show verification failure details
-- Don't launch merger
+- Don't create index
 - Present recovery options (see Step 4.2 and 4.3 for automatic fix workflow and manual recovery)
 
 **Note:** If user chose "No" for independent verification, this step is skipped entirely.
@@ -617,13 +650,15 @@ Merger: Pending (awaiting all verifications)
 
 **Optional independent verification:** User chooses whether to run independent verifiers (extractors always self-verify)
 
-**Fail fast:** Stop on errors, don't merge partial/bad results
+**Fail fast:** Stop on errors, don't create index with partial/bad results
 
-**Verify before merge:** If verification enabled, no merger until all verifications pass
+**Verify before index:** If verification enabled, no index until all verifications pass
 
 **One artifact type:** This orchestration handles ONE artifact type. Multiple types require multiple complete workflows (processed sequentially)
 
 **Module-based organization:** Split by logical features/directories for clarity
+
+**Folder-based output:** Each artifact type gets its own folder with module files and an index
 
 **User control:** User chooses verification level based on their needs
 
@@ -643,6 +678,6 @@ Processing [N] artifact types sequentially...
 [Type 3 - complete workflow with batched parallel execution]
 ```
 
-**Note:** Each artifact type gets its own complete workflow (extract → verify → merge) with batched parallel execution within that type.
+**Note:** Each artifact type gets its own complete workflow (extract → verify → create index) with batched parallel execution within that type.
 
 **Note:** After all extractions complete, offer to create an executive summary using the unravel-summarizer agent.

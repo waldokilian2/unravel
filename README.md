@@ -60,7 +60,7 @@ Unravel follows a consistent extraction workflow with **batched parallel executi
 User → Select type(s) → Choose verification → Main Agent follows orchestrating-extraction skill
   → Spawns extractors in batches of 2 (parallel within batch)
   → [If verification enabled] Spawns verifiers in batches of 2 (parallel within batch)
-  → Spawns merger → Output
+  → Creates 00-INDEX.md → Output
 ```
 
 **Key:** Max 3 concurrent agents (main orchestrator + 2 parallel workers)
@@ -146,13 +146,30 @@ The executive summary includes:
 
 All extracted artifacts are saved to `docs/output/`:
 
-- business-rules.md
-- process-flows.md
-- data-specs.md
-- user-stories.md
-- security-nfrs.md
-- integrations.md
-- **EXECUTIVE-SUMMARY.md** (optional, generated on request)
+```
+docs/output/
+├── business-rules/
+│   ├── 00-INDEX.md       ← Table of contents with links
+│   ├── auth.md           ← Module: auth
+│   ├── payment.md        ← Module: payment
+│   └── [other modules].md
+├── process-flows/
+│   ├── 00-INDEX.md
+│   └── [modules].md
+├── data-specs/
+│   ├── 00-INDEX.md
+│   └── [modules].md
+├── user-stories/
+│   ├── 00-INDEX.md
+│   └── [modules].md
+├── security-nfrs/
+│   ├── 00-INDEX.md
+│   └── [modules].md
+├── integrations/
+│   ├── 00-INDEX.md
+│   └── [modules].md
+└── EXECUTIVE-SUMMARY.md   ← Optional, generated on request
+```
 
 ## How It Works
 
@@ -166,6 +183,7 @@ All extracted artifacts are saved to `docs/output/`:
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  • Loads skill content ONCE (reads each skill file)  │   │
 │  │  • Asks user for verification preference            │   │
+│  │  • Creates output folder for artifact type           │   │
 │  │  • Counts files & splits into modules               │   │
 │  │  • Spawns agents in batches of 2 (parallel)         │   │
 │  │  • Embeds skill content in agent prompts            │   │
@@ -186,24 +204,24 @@ All extracted artifacts are saved to `docs/output/`:
                        │
                        ▼
          [If verification enabled: Spawn verifiers in batches of 2]
-         [If verification disabled: Skip to merger]
+         [If verification disabled: Skip to index creation]
                        │
                        ▼
          [If verifier finds issues: Spawn fixer → Re-verify]
-         [If fix succeeds: Proceed to merge]
+         [If fix succeeds: Proceed to index creation]
          [If fix fails: Show manual recovery options]
                        │
                        ▼
                   All modules ready
                        │
                        ▼
-                  unravel-merger
+              Orchestrator creates 00-INDEX.md
                        │
                        ▼
               unravel-summarizer (optional)
 ```
 
-**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with fixable issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator reads each skill ONCE and embeds the content in agent prompts - eliminating redundant skill file reads. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
+**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator reads each skill ONCE and embeds the content in agent prompts - eliminating redundant skill file reads. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
 
 ### Agents
 
@@ -212,14 +230,13 @@ All extracted artifacts are saved to `docs/output/`:
 | **unravel-extractor** | Extract patterns from files (per module) with self-verification |
 | **unravel-verifier** | Optionally verify extraction outputs (independent agent) |
 | **unravel-fixer** | Surgically fix specific issues in extraction output (automatic) |
-| **unravel-merger** | Combine extraction outputs into final file |
 | **unravel-summarizer** | Create executive summary from all outputs |
 
 ### Skills
 
 | Skill | Purpose |
 |-------|---------|
-| **orchestrating-extraction** | Coordinate extractors, optional verifiers, and merger for all extractions |
+| **orchestrating-extraction** | Coordinate extractors, optional verifiers, and index creation |
 | **using-unravel** | Main guide for using Unravel |
 | **extract-business-rules** | Domain knowledge for business rules |
 | **extract-process-flows** | Domain knowledge for process flows |
@@ -235,9 +252,10 @@ All extracted artifacts are saved to `docs/output/`:
 - **Batched parallel execution:** Extractors run in batches of 2 for optimal throughput (verifiers optional)
 - **3-agent limit:** Main orchestrator + 2 parallel agents maximum at any time
 - **Optional independent verification:** User chooses whether to run independent verifiers (extractors always self-verify)
-- **Automatic surgical fixes:** When verification fails with fixable issues, automatically apply surgical fixes and re-verify
-- **Fail-fast:** Stops on errors, doesn't merge partial/bad results
+- **Automatic surgical fixes:** When verification fails with issues, automatically apply surgical fixes and re-verify
+- **Fail-fast:** Stops on errors, doesn't create index with partial/bad results
 - **One artifact type per workflow:** Multiple types = multiple complete workflows (processed sequentially)
+- **Folder-based output:** Each artifact type gets its own folder with module files and an index
 
 ### Commands
 

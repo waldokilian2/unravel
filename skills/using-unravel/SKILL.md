@@ -46,24 +46,24 @@ Extracts and documents:
                        │
                        ▼
          [If verification enabled: Spawn verifiers in batches of 2]
-         [If verification disabled: Skip to merger]
+         [If verification disabled: Skip to index creation]
                        │
                        ▼
          [If verifier finds issues: Spawn fixer → Re-verify]
-         [If fix succeeds: Proceed to merge]
+         [If fix succeeds: Proceed to index creation]
          [If fix fails: Show manual recovery options]
                        │
                        ▼
                   All modules ready
                        │
                        ▼
-                  unravel-merger
+              Orchestrator creates 00-INDEX.md
                        │
                        ▼
               unravel-summarizer (optional)
 ```
 
-**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with fixable issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
+**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
 
 ## When to Use Unravel
 
@@ -201,31 +201,33 @@ All extractions complete! Would you like me to create an executive summary?
 **Process:**
 1. Receive domain knowledge in prompt (embedded by orchestrator)
 2. Extract + self-verify each artifact from **provided file list**
-3. Output to docs/output/[type].[module].tmp.md
+3. Output to docs/output/[type]/[module].md
 
 **Note:** The orchestrator provides domain knowledge in the prompt. The extractor does NOT read skills. The orchestrator discovers files and passes specific paths to the extractor.
 
 ### orchestrating-extraction (skill)
-**Purpose:** Coordinate extractors, verifiers (optional), and merger for all extractions
+**Purpose:** Coordinate extractors, verifiers (optional), and index creation for all extractions
 **Use for:** All extraction tasks (small and large)
 **Process:**
 1. Ask user for verification preference
 2. Load skill content ONCE using Skill tool
 3. Embed skill content in extractor/verifier prompts
-4. Use Glob/Grep to discover all relevant files
-5. **Smart module detection:**
+4. Create output folder: docs/output/[artifact-type]/
+5. Use Glob/Grep to discover all relevant files
+6. **Smart module detection:**
    - Strategy 1: User-defined modules (if specified in request)
    - Strategy 2: Directory-based (clean structure)
    - Strategy 3: Import/dependency clustering (flat structure)
    - Strategy 4: Single module fallback (unclear structure)
-6. Spawn extractors in batches of 2 (parallel within batch, sequential between batches)
-7. If user chose "Yes": spawn verifiers in batches of 2 (parallel within batch, sequential between batches)
-8. When ready: spawn unravel-merger agent
+7. Spawn extractors in batches of 2 (parallel within batch, sequential between batches)
+8. If user chose "Yes": spawn verifiers in batches of 2 (parallel within batch, sequential between batches)
+9. When ready: create 00-INDEX.md with links to all module files
 
 **IMPORTANT:** Handles ONE artifact type at a time. Multiple types = multiple complete workflows (processed sequentially).
 **Execution:** Batched parallel (extractors/verifiers run in batches of 2, max 3 concurrent agents total).
 **Verification:** Optional - user chooses whether to run independent verifiers (extractors always self-verify)
 **Skill loading:** Orchestrator reads each skill ONCE and embeds content in agent prompts (eliminates redundant skill reads)
+**Output:** Folder structure with module files and index (no single combined file)
 
 ### unravel-verifier
 **Purpose:** Independently verify extraction outputs (optional)
@@ -257,22 +259,11 @@ All extractions complete! Would you like me to create an executive summary?
 - **incomplete** - Augment (add missing details)
 - **misdescribed** - Correct (fix description/semantics)
 
-### unravel-merger
-**Purpose:** Combine extraction outputs into final file
-**Use for:** After main agent dispatches extractors (and verifiers, if enabled)
-**Process:**
-1. Read all temp files
-2. Merge into single output
-3. Cleanup temp files
-4. Output final: docs/output/[type].md
-
-**Note:** Runs after extractors complete (if verification disabled) or after all verifiers pass (if verification enabled).
-
 ### unravel-summarizer
 **Purpose:** Create executive summary from all outputs
 **Use for:** Optional, after all extractions complete
 **Process:**
-1. Read all artifact files
+1. Read all artifact index files (00-INDEX.md) and module files
 2. Analyze and synthesize key findings
 3. Create EXECUTIVE-SUMMARY.md with overview, insights, recommendations
 
@@ -280,9 +271,10 @@ All extractions complete! Would you like me to create an executive summary?
 
 All artifacts saved to: `docs/output/`
 
-- business-rules.md
-- process-flows.md
-- data-specs.md
+Each artifact type gets its own folder:
+- business-rules/ (with 00-INDEX.md and module files)
+- process-flows/ (with 00-INDEX.md and module files)
+- data-specs/ (with 00-INDEX.md and module files)
 - user-stories.md
 - security-nfrs.md
 - integrations.md

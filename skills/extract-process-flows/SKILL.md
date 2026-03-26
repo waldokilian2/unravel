@@ -46,14 +46,14 @@ grep -r "\.then(" --include="*.ts" --include="*.js" -l | head -20
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Process Flows` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
+
+## Artifacts
 
 ### Flow: [Descriptive Name]
 **Source:** [filename.ts:15-30](path/to/filename.ts#L15-L30)
@@ -82,26 +82,7 @@ stateDiagram-v2
 **States:** `[state1]` → `[state2]` → `[state3]`
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# Process Flows
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## auth Module
-
-### Flow: User Registration
-**Source:** [src/auth/register.ts:15-30](src/auth/register.ts#L15-L30)
-
-```mermaid
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 flowchart TD
     A[Request] --> B[validateUser]
     B --> C[createUser]

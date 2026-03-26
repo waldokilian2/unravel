@@ -2,7 +2,7 @@
   "id": "unravel",
   "name": "Unravel",
   "description": "Unravel the mysteries in your code - automatic extraction of business rules, process flows, data specs, user stories, security measures, and integrations",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "author": "waldokilian2",
   "repository": "https://github.com/waldokilian2/Unravel"
 }

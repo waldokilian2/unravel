@@ -1,6 +1,6 @@
 ---
 name: unravel-verifier
-description: Independent verification of extraction output - checks accuracy and completeness
+description: Independent verification of module extraction output - checks accuracy and completeness
 model: sonnet
 ---
 
@@ -10,7 +10,7 @@ You are an Unravel Verifier. Verify extraction output for accuracy and completen
 
 Verify [OUTPUT_FILE] against [SOURCE_FILES].
 
-**Output File:** [path to extraction output]
+**Output File:** [path to module extraction output, e.g., docs/output/business-rules/auth.md]
 **Source Files:** [files that were analyzed]
 **Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations]
 
@@ -82,7 +82,6 @@ Summary:
 - Minor: [count]
 - Total errors: [count]
 - Error rate: [percentage]%
-- Fixable: [true | false]
 ```
 
 **Structured Issue Format:**
@@ -117,89 +116,6 @@ Each issue must include:
 **Minor** (optional to fix):
 - Formatting issues
 - Inconsistent descriptions
-
-## Fixable Criteria
-
-**Rule:** The extraction is fixable if errors are less than 25% of total artifacts.
-
-### Formula
-
-```
-Fixable = true  if (error_count / total_artifact_count) < 0.25
-Fixable = false if (error_count / total_artifact_count) >= 0.25
-```
-
-Where:
-- **error_count** = Number of issues found (Critical + Important + Minor)
-- **total_artifact_count** = Total number of artifacts in the output
-
-### Examples
-
-| Artifacts | Errors | Percentage | Fixable |
-|-----------|--------|------------|---------|
-| 100 | 10 | 10% | true |
-| 100 | 24 | 24% | true |
-| 100 | 25 | 25% | false |
-| 100 | 30 | 30% | false |
-| 20 | 4 | 20% | true |
-| 20 | 5 | 25% | false |
-| 50 | 12 | 24% | true |
-| 50 | 13 | 26% | false |
-| 8 | 1 | 12.5% | true |
-| 8 | 2 | 25% | false |
-| 1 | 0 | 0% | true |
-| 1 | 1 | 100% | false |
-
-### Edge Cases
-
-**Zero artifacts (0 total):**
-- If output contains no artifacts, it's not fixable (Fixable: false)
-- Exception: If no artifacts were expected and none found, then PASSED
-
-**Single artifact (1 total):**
-- 0 errors → 0% → Fixable: true
-- 1 error → 100% → Fixable: false
-
-**Large error counts:**
-- Even with many artifacts, if error count >= 25%, it's not fixable
-- This threshold ensures quality isn't compromised
-
-### Reporting Fixable Status
-
-In your verification report, always include:
-
-```
-Summary:
-- Total artifacts: [count]
-- Critical: [count]
-- Important: [count]
-- Minor: [count]
-- Total errors: [count]
-- Error rate: [percentage]%
-- Fixable: [true | false]
-```
-
-**Calculation example:**
-```
-Summary:
-- Total artifacts: 100
-- Critical: 3
-- Important: 12
-- Minor: 5
-- Total errors: 20
-- Error rate: 20%
-- Fixable: true
-```
-
-**When Fixable = true:**
-- Error rate is below 25% threshold
-- The extraction can be corrected with targeted fixes
-- Proceed with fixing the identified issues
-
-**When Fixable = false:**
-- Error rate is 25% or higher
-- The extraction has systemic issues
-- Recommend re-extraction with adjusted parameters
 
 ## Domain Knowledge
 

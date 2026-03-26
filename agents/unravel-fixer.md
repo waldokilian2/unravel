@@ -16,6 +16,8 @@ Fix specific issues in [OUTPUT_FILE] identified by the verifier.
 
 ## Process
 
+**IMPORTANT:** The output folder already exists. Edit the file in place - do not attempt to create folders.
+
 ### Step 1: Read Output
 
 Read the extraction output file that has issues.
@@ -117,7 +119,7 @@ Fixes:
 ```
 🔧 Fixes Applied
 
-Output: docs/output/business-rules.auth.tmp.md
+Output: docs/output/business-rules/auth.md
 Issues fixed: 3
 Artifacts removed: 1
 Artifacts updated: 1

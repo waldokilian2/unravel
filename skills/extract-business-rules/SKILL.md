@@ -53,45 +53,22 @@ Exclude generated code:
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Business Rules` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
 
+## Artifacts
+
 | Rule | Source | Enforcement |
 |------|--------|-------------|
 | [Business constraint] | [filename.ts:42](path/to/filename.ts#L42) | [How it's enforced] |
 | [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# Business Rules
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## auth Module
-| Rule | Source | Enforcement |
-|------|--------|-------------|
-| [Business constraint] | [filename.ts:42](path/to/filename.ts#L42) | [How it's enforced] |
-
-## payment Module
-| Rule | Source | Enforcement |
-|------|--------|-------------|
-| [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
-```
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 
 ## Core Principles
 

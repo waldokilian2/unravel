@@ -48,14 +48,14 @@ grep -r "webhook\|queue\|pubsub\|kafka\|sqs" --include="*.ts" --include="*.js" -
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# External Integrations` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
+
+## Artifacts
 
 | Detail | Value | Source |
 |--------|-------|--------|
@@ -64,32 +64,7 @@ Files Analyzed: [N] files
 | Auth Method | [API Key/OAuth/etc] | [env: VAR_NAME] |
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# External Integrations
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## payment Module
-| Detail | Value | Source |
-|--------|-------|--------|
-| Provider | Stripe | [src/payment/stripe.ts:1](src/payment/stripe.ts#L1) |
-| Endpoint | https://api.stripe.com | env: STRIPE_API_URL |
-
-## email Module
-| Detail | Value | Source |
-|--------|-------|--------|
-| Provider | SendGrid | [src/email/sendgrid.ts:1](src/email/sendgrid.ts#L1) |
-| Endpoint | https://api.sendgrid.com | env: SENDGRID_URL |
-```
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 
 **Example:**
 ```markdown

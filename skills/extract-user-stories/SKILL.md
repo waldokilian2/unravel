@@ -47,14 +47,14 @@ grep -r "command\|cli\|yargs\|commander" --include="*.ts" -l | head -20
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# User Stories` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
+
+## Artifacts
 
 - As a [role], I can [action]
   Source: [METHOD] [path] ([filename.ts:23](path/to/filename.ts#L23))
@@ -65,30 +65,7 @@ Files Analyzed: [N] files
   Implementation: [function name]
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# User Stories
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## auth Module
-- As a user, I can register with email/password
-  Source: POST /api/auth/register ([src/controllers/auth.ts:23](src/controllers/auth.ts#L23))
-  Implementation: register() function
-
-## payment Module
-- As a user, I can make a payment
-  Source: POST /api/payment/charge ([src/payment/controller.ts:15](src/payment/controller.ts#L15))
-  Implementation: charge() function
-```
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 
 **Example:**
 ```markdown

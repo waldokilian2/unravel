@@ -47,45 +47,22 @@ grep -r "DTO\|dto\|Request\|Response" --include="*.ts" --include="*.js" -l | hea
 
 ## Output Format
 
-**Note:** This format is what the extractor outputs per module. The merger will combine all module outputs and add `# Data Specifications` as the top-level title.
-
 **Per-module extractor output:**
 ```markdown
-## [Module Name] Module
+# [Module Name] Module
 
 Extraction: [YYYY-MM-DD]
 Files Analyzed: [N] files
 
+## Artifacts
+
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
 | [field name] | [data type] | [validation/rules] | [filename.ts:42](path/to/filename.ts#L42) |
 | [field name] | [data type] | [validation/rules] | [filename.ts:15](path/to/filename.ts#L15) |
 ```
 
-**Final merged output (after merger combines all modules):**
-```markdown
-# Data Specifications
-
-Extraction: [YYYY-MM-DD]
-
-## Extraction Summary
-- **Total Artifacts:** [count]
-- **Files Analyzed:** [unique file count]
-- **Modules:** [list]
-- **Verification:** Each module independently verified
-
----
-
-## auth Module
-| Field | Type | Constraints | Source |
-|-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [filename.ts:42](path/to/filename.ts#L42) |
-
-## payment Module
-| Field | Type | Constraints | Source |
-|-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [filename.ts:15](path/to/filename.ts#L15) |
-```
+Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
 
 ## Core Principles
 
