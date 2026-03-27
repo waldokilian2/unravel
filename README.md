@@ -1,264 +1,172 @@
 # Unravel
 
-Unravel the mysteries in your code. Automatic business artifact extraction from source code - understand what any system does by reading what it's built from.
+Turn source code into business documentation. Unravel extracts structured artifacts from any codebase so you can understand what a system does without reading code.
 
-## Installation
+## Quick Start
 
 ```bash
+# Install the plugin
 /plugin marketplace add waldokilian2/unravel-marketplace
 /plugin install unravel@unravel-marketplace
+
+# Run it
+/unravel
 ```
 
-## Usage
-
-### Step 1: Select What to Extract
-
-When you ask Unravel to analyze code, it will first ask you to select artifact categories:
+Or just describe what you want in plain language:
 
 ```
-What would you like to extract?
-
-□ Business Logic - Business rules, process flows, user stories
-□ Data Specifications - Schemas, ORM classes, DTOs, validation
-□ Technical Details - Security/NFRs, integrations
-□ Everything - Extract all 6 artifact types
+Analyze the payment system
+Extract business rules from auth.ts
+What are the validation rules in this code?
 ```
 
-**Follow-up refinement** (if you select a category):
+## What It Extracts
+
+| Artifact | What You Get |
+|----------|-------------|
+| **Business Rules** | Validation constraints, access controls, error conditions |
+| **Process Flows** | Function call chains, state machines, decision paths |
+| **Data Specs** | Schemas, ORM models, DTOs, relationships |
+| **User Stories** | End-user actions from controllers, routes, CLI handlers |
+| **Security / NFRs** | Auth patterns, rate limits, encryption, logging |
+| **Integrations** | HTTP clients, database connections, external services |
+
+## How It Works
 
 ```
-You selected Business Logic. Which types?
-
-□ All business logic types (rules, processes, user stories)
-□ Business Rules only
-□ Process Flows only
-□ User Stories only
+You select what to extract
+        │
+        ▼
+  Files discovered & grouped into modules
+        │
+        ▼
+  Extractors run in parallel (2 at a time)
+        │
+        ▼
+  Optional independent verification
+        │
+    ┌───┴───┐
+  Pass      Fail
+    │         │
+    │      Surgical fix → Re-verify
+    │         │
+    └────┬────┘
+         ▼
+  Index created with links to all modules
+         │
+         ▼
+  Optional executive summary
 ```
 
-**Step 2: Choose Verification Level**
+### Verification
 
-After selecting artifact types, Unravel will ask about verification:
+Every extractor self-verifies its output. You can also enable **independent verification**, which spawns a separate agent to cross-check each extraction against the source code. If issues are found, Unravel automatically applies surgical fixes and re-verifies.
 
-```
-Would you like independent verification of extracted artifacts?
+| Mode | Speed | Thoroughness |
+|------|-------|-------------|
+| Self-verify (default) | Fast | Good for most codebases |
+| Independent verification | Slower | Catches more errors, recommended for critical systems |
 
-[✓] Yes - Run independent verifier after each extractor (most thorough, slower)
-[ ] No - Skip independent verifier (extractor self-verifies, faster)
-```
+## Output
 
-**Trade-offs:**
-- **Yes** (Independent verification): Most thorough, catches more errors, but takes longer
-- **No** (Extractor self-verification): Faster, still reliable for most cases
-
-**Note:** Extractors always self-verify their outputs. Independent verification provides an additional layer of validation by having a separate agent review the work.
-
-### Step 3: Unravel Extracts
-
-Unravel follows a consistent extraction workflow with **batched parallel execution**:
-
-```
-User → Select type(s) → Choose verification → Main Agent follows orchestrating-extraction skill
-  → Spawns extractors in batches of 2 (parallel within batch)
-  → [If verification enabled] Spawns verifiers in batches of 2 (parallel within batch)
-  → Creates 00-INDEX.md → Output
-```
-
-**Key:** Max 3 concurrent agents (main orchestrator + 2 parallel workers)
-
-### Example Workflow
-
-```
-You: /unravel
-    or
-You: Analyze the payment system
-
-Claude: What would you like to extract?
-
-       □ Business Logic - Business rules, process flows, user stories
-       □ Data Specifications - Schemas, ORM classes, DTOs, validation
-       □ Technical Details - Security/NFRs, integrations
-       □ Everything - Extract all 6 artifact types
-
-       [User selects Business Logic]
-
-Claude: You selected Business Logic. Which types?
-
-       □ All business logic types (rules, processes, user stories)
-       □ Business Rules only
-       □ Process Flows only
-       □ User Stories only
-
-       [User selects "All business logic types"]
-
-Claude: Would you like independent verification of extracted artifacts?
-
-       [✓] Yes - Run independent verifier after each extractor (most thorough, slower)
-       [ ] No - Skip independent verifier (extractor self-verifies, faster)
-
-       [User selects "Yes" for thorough verification]
-
-Claude: Found 47 files across 3 modules.
-       Processing with batched parallel execution (3-agent limit)...
-
-       Batch 1/2: Extracting business-rules from auth and payment modules... ✓
-       Batch 2/2: Extracting business-rules from user module... ✓
-
-       Batch 1/2: Verifying auth and payment modules...
-          ✓ auth module - PASSED
-          ❌ payment module - FAILED (3 issues found)
-
-       🔧 Applying surgical fixes to payment module...
-          Removed 1 hallucinated rule
-          Updated 1 wrong location
-          Augmented 1 incomplete rule
-       ✓ Re-verification PASSED
-
-       Batch 2/2: Verifying user module... ✓
-       Merging outputs... ✓
-
-       Output: docs/output/business-rules.md
-
-       Now extracting process-flows...
-       [same batched parallel process for process-flows]
-
-       Now extracting user-stories...
-       [same batched parallel process for user-stories]
-```
-
-### Step 4: Executive Summary (Optional)
-
-After all extractions complete, Unravel offers to create an executive summary:
-
-```
-All extractions complete! Would you like me to create an executive summary?
-
-[✓] Yes - Create EXECUTIVE-SUMMARY.md
-[ ] No - I'm done
-```
-
-The executive summary includes:
-- Overview of what the codebase does
-- Key findings from each artifact type
-- Top insights and recommendations
-- Links to all generated artifacts
-
-### Output
-
-All extracted artifacts are saved to `docs/output/`:
+All artifacts land in `docs/output/`, organized by type:
 
 ```
 docs/output/
 ├── business-rules/
-│   ├── 00-INDEX.md       ← Table of contents with links
-│   ├── auth.md           ← Module: auth
-│   ├── payment.md        ← Module: payment
-│   └── [other modules].md
+│   ├── 00-INDEX.md          ← Table of contents
+│   ├── auth.md              ← One file per module
+│   └── payment.md
 ├── process-flows/
 │   ├── 00-INDEX.md
-│   └── [modules].md
+│   └── ...
 ├── data-specs/
-│   ├── 00-INDEX.md
-│   └── [modules].md
 ├── user-stories/
-│   ├── 00-INDEX.md
-│   └── [modules].md
 ├── security-nfrs/
-│   ├── 00-INDEX.md
-│   └── [modules].md
 ├── integrations/
-│   ├── 00-INDEX.md
-│   └── [modules].md
-└── EXECUTIVE-SUMMARY.md   ← Optional, generated on request
+└── EXECUTIVE-SUMMARY.md      ← Optional, on request
 ```
 
-## How It Works
-
-### Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Main Agent (You)                        │
-│                                                             │
-│  Follows orchestrating-extraction skill                     │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  • Loads skill content ONCE (reads each skill file)  │   │
-│  │  • Asks user for verification preference            │   │
-│  │  • Creates output folder for artifact type           │   │
-│  │  • Counts files & splits into modules               │   │
-│  │  • Spawns agents in batches of 2 (parallel)         │   │
-│  │  • Embeds skill content in agent prompts            │   │
-│  │  • 3-agent limit: main + 2 parallel agents max      │   │
-│  └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                ┌─────────────┴─────────────┐
-                │                           │
-         Spawn Agent                    Spawn Agent
-    unravel-extractor              unravel-extractor
-      (Module 1)                     (Module 2)
-    [Skill embedded in prompt]    [Skill embedded in prompt]
-         │                               │
-         └─────────────┬─────────────────┘
-                       │
-                [Both run in parallel]
-                       │
-                       ▼
-         [If verification enabled: Spawn verifiers in batches of 2]
-         [If verification disabled: Skip to index creation]
-                       │
-                       ▼
-         [If verifier finds issues: Spawn fixer → Re-verify]
-         [If fix succeeds: Proceed to index creation]
-         [If fix fails: Show manual recovery options]
-                       │
-                       ▼
-                  All modules ready
-                       │
-                       ▼
-              Orchestrator creates 00-INDEX.md
-                       │
-                       ▼
-              unravel-summarizer (optional)
-```
-
-**Key:** Extractors run in batches of 2 (parallel within batch, sequential between batches). Verifiers run in batches of 2 if enabled by user. If verification fails with issues, fixer is spawned to surgically fix problems, then re-verified. Main orchestrator reads each skill ONCE and embeds the content in agent prompts - eliminating redundant skill file reads. Main orchestrator waits for each batch to complete before launching the next batch. This maximizes throughput while respecting the 3-agent limit.
+## Under the Hood
 
 ### Agents
 
-| Agent | Purpose |
-|-------|---------|
-| **unravel-extractor** | Extract patterns from files (per module) with self-verification |
-| **unravel-verifier** | Optionally verify extraction outputs (independent agent) |
-| **unravel-fixer** | Surgically fix specific issues in extraction output (automatic) |
-| **unravel-summarizer** | Create executive summary from all outputs |
+Four specialized agents handle the work:
+
+| Agent | Role | Tools |
+|-------|------|-------|
+| **unravel-extractor** | Reads files, extracts patterns, writes output | Grep, Glob, Read, Write |
+| **unravel-verifier** | Cross-checks extraction against source code | Read, Grep, Glob |
+| **unravel-fixer** | Applies surgical fixes when verification fails | Read, Edit |
+| **unravel-summarizer** | Creates executive summary from all outputs | Read, Glob, Write |
 
 ### Skills
 
+Eight skills provide domain knowledge and orchestration:
+
 | Skill | Purpose |
 |-------|---------|
-| **orchestrating-extraction** | Coordinate extractors, optional verifiers, and index creation |
-| **using-unravel** | Main guide for using Unravel |
-| **extract-business-rules** | Domain knowledge for business rules |
-| **extract-process-flows** | Domain knowledge for process flows |
-| **extract-data-specs** | Domain knowledge for data specs |
-| **extract-user-stories** | Domain knowledge for user stories |
-| **extract-security-nfrs** | Domain knowledge for security/NFRs |
-| **extract-integrations** | Domain knowledge for integrations |
+| **using-unravel** | Entry point — artifact selection, verification preference |
+| **orchestrating-extraction** | Per-type workflow — discovery, batching, verification, index |
+| **extract-business-rules** | Pattern definitions for business rules |
+| **extract-process-flows** | Pattern definitions for process flows |
+| **extract-data-specs** | Pattern definitions for data specifications |
+| **extract-user-stories** | Pattern definitions for user stories |
+| **extract-security-nfrs** | Pattern definitions for security and NFRs |
+| **extract-integrations** | Pattern definitions for integrations |
 
 ### Execution Model
 
-- **All agents spawned by main agent:** No nested agent spawning
-- **Skill loading optimization:** Orchestrator reads each skill ONCE and embeds content in agent prompts (eliminates redundant skill reads)
-- **Batched parallel execution:** Extractors run in batches of 2 for optimal throughput (verifiers optional)
-- **3-agent limit:** Main orchestrator + 2 parallel agents maximum at any time
-- **Optional independent verification:** User chooses whether to run independent verifiers (extractors always self-verify)
-- **Automatic surgical fixes:** When verification fails with issues, automatically apply surgical fixes and re-verify
-- **Fail-fast:** Stops on errors, doesn't create index with partial/bad results
-- **One artifact type per workflow:** Multiple types = multiple complete workflows (processed sequentially)
-- **Folder-based output:** Each artifact type gets its own folder with module files and an index
+- **Batched parallel:** 2 agents at a time (main orchestrator + 2 workers = 3 max)
+- **Skill embedding:** Each extraction skill is read once and embedded in agent prompts
+- **Fail-fast:** No index created with partial or bad results
+- **Sequential by type:** Multiple artifact types run as separate complete workflows
+- **Multi-language:** TypeScript, JavaScript, Python, Go, Java patterns supported
 
-### Commands
+## Example Session
 
-| Command | Purpose |
-|---------|---------|
-| **/unravel** | Start Unravel extraction |
+```
+You: /unravel
+
+Claude: What would you like to extract?
+
+       □ Business Logic - Rules, flows, user stories
+       □ Data Specifications - Schemas, models, DTOs
+       □ Technical Details - Security, integrations
+       □ Everything - All 6 types
+
+       [You select Business Logic → All types]
+
+Claude: Would you like independent verification?
+
+       [✓] Yes - Most thorough
+       [ ] No  - Faster
+
+       [You select Yes]
+
+Claude: Found 47 files across 3 modules.
+
+       Batch 1/2: Extracting business-rules from auth, payment... done
+       Batch 2/2: Extracting business-rules from user... done
+
+       Verifying auth... PASSED
+       Verifying payment... FAILED (3 issues)
+       Verifying user... PASSED
+
+       Fixing payment... Removed 1 hallucinated rule,
+                        Updated 1 wrong location,
+                        Augmented 1 incomplete rule
+       Re-verification PASSED
+
+       Output: docs/output/business-rules/
+
+       [Repeats for process-flows and user-stories]
+
+       All extractions complete! Create an executive summary?
+       [You select Yes]
+```
+
+## License
+
+MIT

@@ -1,44 +1,44 @@
 ---
 name: extract-business-rules
-description: Domain knowledge for extracting business rules - conditional logic, validation, exception handling
+description: This skill provides domain knowledge for extracting business rules from code. It should be used when the agent is tasked with finding conditional logic, validation rules, guard clauses, exception handling, regex validation, or any if/else-based business constraints in source code. Make sure to use this skill whenever business constraints, domain validation, or conditional enforcement logic needs to be documented, even if the code is in Python, Go, Java, or Rust rather than TypeScript.
 ---
 
 # Business Rules Extraction
 
-Domain knowledge for extracting business rules from code.
+Business rules are the constraints that the system enforces on data and behavior. They capture the "what must be true" that stakeholders care about — not the mechanism, but the constraint itself.
 
 ## What to Extract
 
 Business rules are conditional logic that enforces business constraints:
 
-- **If/else chains and guard clauses** - Early returns based on conditions
-- **Validation decorators and libraries** - @Min, @Max, @Email, @Validate, etc.
-- **Exception throwing and error handling** - throw, raise, custom errors
-- **Regex patterns and format validation** - Regular expressions for validation
-- **Condition checks and assertions** - assert(), verify(), check()
+- **If/else chains and guard clauses** — Early returns, preconditions, guard expressions
+- **Validation decorators and annotations** — `@Min`, `@Max`, `@Valid`, `@Validate`, Pydantic validators, Bean Validation
+- **Exception throwing and error raising** — `throw`, `raise`, `panic`, custom error types
+- **Regex patterns and format validation** — Regular expressions constraining input shape
+- **Assertion checks** — `assert()`, `verify()`, `check()`, `require()`
+
+## Where Business Rules Live (vs. Other Types)
+
+Business rules overlap with other artifact types. Apply these boundaries:
+
+- **Business rule vs. data spec:** A `@MinLength(8)` decorator is a *data spec* (field constraint on a schema). The business rule is the *reason* — "Passwords must be at least 8 characters." Extract the business constraint here; the schema annotation belongs in data-specs.
+- **Business rule vs. security/NFR:** A `if (!user.isActive) throw new ForbiddenError()` is a *security measure* (authorization check). Extract it in security-nfrs. But `if (order.total < 50) throw new MinOrderError()` is a *business constraint* — extract it here.
+- **Business rule vs. user story:** A `@Post('checkout')` endpoint is a *user story*. The validation logic *inside* that endpoint (e.g., checking stock levels) is a *business rule*.
+
+**Guideline:** If the constraint exists because the business requires it (not because of security architecture or data shape), it's a business rule.
 
 ## Hotspot Discovery
 
-Use these patterns to find files with business rules:
+Use the Glob and Grep tools to find files with business rules. Focus on directories that contain domain logic, not infrastructure:
 
-```bash
-# Find conditional logic
-grep -r "if.*:" --include="*.py" --include="*.ts" --include="*.js" -l | head -20
-
-# Find validation calls
-grep -r "validate\|verify\|check" --include="*.py" --include="*.ts" -l | head -20
-
-# Find exception throwing
-grep -r "throw\|raise\|throwError" --include="*.ts" --include="*.js" -l | head -20
-
-# Find regex patterns
-grep -r "test(\|match(" --include="*.ts" --include="*.js" -l | head -20
+```
+Grep:  pattern="if\s*\(.*return" type=ts,js,py,go,java output_mode=files_with_matches
+Grep:  pattern="validate|verify|check|require" type=ts,js,py,go,java output_mode=files_with_matches
+Grep:  pattern="throw|raise|panic|Error\(" type=ts,js,py,go,java output_mode=files_with_matches
+Grep:  pattern="assert|invariant|precondition" type=ts,js,py,go,java output_mode=files_with_matches
 ```
 
-Exclude generated code:
-```bash
---exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build --exclude-dir=.next
-```
+**Prioritize:** Start with files in directories named `domain`, `rules`, `validation`, `services`, or `logic` — these tend to contain concentrated business rules. Skip test files and generated code.
 
 ## Pattern Signals
 
@@ -46,10 +46,10 @@ Exclude generated code:
 |--------------|---------------|-------------|
 | `if (age < 18) return` | Age must be >= 18 | Guard clause returns early |
 | `@Min(1) @Max(100)` | Range: 1-100 | Validation decorator |
-| `throw new InvalidStateError()` | State validation required | Exception throw |
-| `/^[A-Z]{2}\d{4}$/` | Format: 2 letters + 4 digits | Regex validation |
-| `assert(user.canEdit)` | Permission check required | Assertion |
-| `if (!isValid) return` | Validity check required | Guard clause |
+| `raise ValueError("expired")` | Token must not be expired | Exception raising |
+| `if !valid { return }` | Validity check required | Guard expression |
+| `func MustBeAdmin(u User) error` | Admin role required | Go error return pattern |
+| `assert(user.canEdit)` | Edit permission required | Assertion |
 
 ## Output Format
 
@@ -68,14 +68,24 @@ Files Analyzed: [N] files
 | [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
 ```
 
-Each module file is standalone. The orchestrator creates an 00-INDEX.md that links to all module files.
+**Example:**
+```markdown
+## auth Module
+
+| Rule | Source | Enforcement |
+|------|--------|-------------|
+| Age must be >= 18 | [src/auth/registration.ts:12](src/auth/registration.ts#L12) | Guard clause returns early |
+| Password must be 8+ chars | [src/auth/validation.ts:5](src/auth/validation.ts#L5) | @MinLength(8) decorator |
+| Email format validated | [src/auth/validation.ts:8](src/auth/validation.ts#L8) | Regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ |
+| Invalid token throws 401 | [src/auth/jwt.ts:23](src/auth/jwt.ts#L23) | throw new UnauthorizedError() |
+```
 
 ## Core Principles
 
-**Rule-first:** Extract the business constraint, not the implementation
+**Extract the constraint, not the code.** Stakeholders need to know "passwords must be 8+ characters", not "there's a @MinLength decorator on line 5". The source location is for traceability — the rule text is for understanding.
 
-**Hotspot-first:** Find files with patterns before reading
+**Verify before recording.** For each artifact found, re-read the referenced line in the source file. Confirm the rule actually exists at that location before including it. This prevents hallucinated line references.
 
-**Source locations:** Include file:line for every rule
+**One rule per row.** Don't combine multiple constraints into one artifact. If a function has three guard clauses, extract each as a separate rule.
 
-**No hallucinations:** Only extract what exists in the code
+**Use plain language.** Write rules as natural language constraints ("Order total must be positive"), not code descriptions ("if total <= 0 return error").
