@@ -67,12 +67,12 @@ for i in range(0, len(modules), batch_size):
         task_id = Agent(unravel-extractor,
                        "Extract [artifact-type] from [module-name] module
 
-                        **DOMAIN KNOWLEDGE:**
-                        [Embed the skill content here - include:
-                         - What to Extract section
-                         - Hotspot Discovery patterns
-                         - Output Format
-                         - Core Principles]
+                        **DOMAIN KNOWLEDGE (complete extraction skill):**
+                        [Paste the FULL SKILL.md file content here verbatim.
+                        Do NOT summarize or excerpt. The extractor needs every
+                        section: What to Extract, Where [Type] Lives,
+                        Hotspot Discovery, Pattern Signals, Output Format,
+                        and Core Principles. Copy it all.]
 
                         Artifact Type: [artifact-type]
                         Module Name: [module-name]
@@ -113,8 +113,10 @@ for i in range(0, len(module_files), batch_size):
         task_id = Agent(unravel-verifier,
                        "Verify extraction output
 
-                        **DOMAIN KNOWLEDGE:**
-                        [Embed the skill content here]
+                        **DOMAIN KNOWLEDGE (complete extraction skill):**
+                        [Paste the FULL SKILL.md file content here verbatim.
+                        The verifier needs the complete skill to understand
+                        pattern definitions, boundary rules, and output format.]
 
                         Output File: [module_file]
                         Source Files: [files that module analyzed]

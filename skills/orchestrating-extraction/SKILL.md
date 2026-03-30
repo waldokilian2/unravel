@@ -1,6 +1,7 @@
 ---
 name: orchestrating-extraction
 description: This skill should be used when coordinating an Unravel extraction workflow. Handles file discovery, module splitting, batched parallel extraction, optional independent verification, and index creation for a single artifact type. The using-unravel skill invokes this skill for each selected artifact type.
+user-invocable: false
 ---
 
 # Orchestrating Extraction
@@ -14,7 +15,7 @@ Coordinate extractors, verifiers, and index creation for a single artifact type.
 
 Analyze the extraction request and coordinate the full extraction pipeline for one artifact type.
 
-**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations]
+**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations | api-contracts | dependency-map | test-coverage | evolution-history | domain-vocabulary]
 **Scope:** [file paths, directories, or "codebase"]
 **Verification Preference:** [Yes | No — provided by using-unravel, do not ask the user]
 
@@ -28,6 +29,8 @@ Load the relevant extraction skill ONCE using the Skill tool:
 Skill("unravel:extract-[artifact-type]")
 ```
 
+The Skill tool returns the **complete SKILL.md content** into your context. Store this entire content — every line from `---` to the end — for embedding in agent prompts.
+
 | Artifact Type | Skill Name |
 |---------------|------------|
 | business-rules | unravel:extract-business-rules |
@@ -36,14 +39,25 @@ Skill("unravel:extract-[artifact-type]")
 | user-stories | unravel:extract-user-stories |
 | security-nfrs | unravel:extract-security-nfrs |
 | integrations | unravel:extract-integrations |
+| api-contracts | unravel:extract-api-contracts |
+| dependency-map | unravel:extract-dependency-map |
+| test-coverage | unravel:extract-test-coverage |
+| evolution-history | unravel:extract-evolution-history |
+| domain-vocabulary | unravel:extract-domain-vocabulary |
 
-**Key sections to extract and embed in agent prompts:**
-1. **What to Extract** — Pattern definitions
-2. **Hotspot Discovery** — File discovery patterns (use Glob/Grep tools, not bash grep)
-3. **Output Format** — Expected output structure
-4. **Core Principles** — Extraction guidelines
+**CRITICAL:** Embed the **complete, verbatim skill content** in every agent prompt. Do NOT summarize, condense, or selectively quote sections. Pass the entire SKILL.md content. The agents have no way to load skills themselves — they depend entirely on what you provide.
 
-**IMPORTANT:** Embed this skill content directly in agent prompts. Do NOT tell agents to use the Skill tool.
+**WRONG:**
+```
+Key patterns from the skill: "Extract if/else chains, validation decorators..."
+```
+
+**RIGHT:**
+```
+--- Paste the full SKILL.md content here, starting from the frontmatter ---
+```
+
+**IMPORTANT:** Do NOT tell agents to use the Skill tool. They cannot access it.
 
 ### Step 1: Discover Files, Create Output Folder, Split into Modules
 
@@ -75,7 +89,7 @@ docs/output/[artifact-type]/
 
 For each module, launch extractors in batches of 2 (max 2 concurrent agents). Embed the skill content directly in the agent prompt. Use `run_in_background=true` for parallel spawns.
 
-For detailed batching pseudocode and timeline examples, read **`references/batching-strategy.md`**.
+For detailed prompt templates, timeline diagrams, and batching pseudocode, read [references/batching-strategy.md](references/batching-strategy.md).
 
 ### Step 3: Verification Phase
 
@@ -107,6 +121,8 @@ For each failed result with issues:
 
 Each failed module gets exactly one fix attempt. If re-verification fails, the module is marked for manual recovery.
 
+For re-verification prompt templates and fixer output parsing, read [references/verification-recovery.md](references/verification-recovery.md).
+
 #### 3.3: Determine Outcome
 
 **If all modules passed:** Proceed to Step 4.
@@ -126,11 +142,11 @@ For each failed module:
 Which option would you like for each failed module?
 ```
 
-For detailed verification recovery examples, read **`references/verification-recovery.md`**.
-
 ### Step 4: Create Index
 
 Only create the index when all modules to be included have passed verification (or the user explicitly chose to skip failed modules).
+
+**Read each module file** before creating the index. For each module, extract a 3-5 word highlight summarizing the most notable findings (e.g., "12 rules, 2 critical gaps", "3 flows, 1 batch job", "5 entities, 2 orphan tables"). This gives readers immediate value without opening every file.
 
 Create `docs/output/[artifact-type]/00-INDEX.md`:
 
@@ -147,9 +163,9 @@ Extraction: [YYYY-MM-DD]
 
 ## Modules
 
-| Module | Artifacts | Link |
-|--------|-----------|------|
-| [module-name] | [count] | [[module-name].md](module-name.md) |
+| Module | Artifacts | Key Findings | Link |
+|--------|-----------|--------------|------|
+| [module-name] | [count] | [3-5 word highlight] | [[module-name].md](module-name.md) |
 
 ---
 
@@ -187,7 +203,7 @@ After all extractions complete, using-unravel will offer to create an executive 
 
 ## Core Principles
 
-- **Skill content embedding:** Read each skill ONCE, embed in agent prompts
+- **Skill content embedding:** Load each skill ONCE via the Skill tool, embed the **full verbatim content** in every agent prompt. Never summarize or excerpt — agents cannot load skills themselves.
 - **Batched parallel execution:** 2 agents at a time, max 3 concurrent
 - **Optional independent verification:** User preference passed from using-unravel
 - **Fail fast:** Do not create index with partial/bad results
@@ -196,7 +212,5 @@ After all extractions complete, using-unravel will offer to create an executive 
 
 ## Additional Resources
 
-### Reference Files
-
-- **`references/batching-strategy.md`** — Detailed batching pseudocode, timeline examples, and parallel execution patterns
-- **`references/verification-recovery.md`** — Verification failure examples, fixer output parsing, and re-verification context building
+- For batching prompt templates, timeline diagrams, and pseudocode, see [references/batching-strategy.md](references/batching-strategy.md)
+- For verification recovery examples, re-verification templates, and fixer output parsing, see [references/verification-recovery.md](references/verification-recovery.md)

@@ -1,6 +1,7 @@
 ---
 name: extract-business-rules
 description: This skill provides domain knowledge for extracting business rules from code. It should be used when the agent is tasked with finding conditional logic, validation rules, guard clauses, exception handling, regex validation, or any if/else-based business constraints in source code. Make sure to use this skill whenever business constraints, domain validation, or conditional enforcement logic needs to be documented, even if the code is in Python, Go, Java, or Rust rather than TypeScript.
+user-invocable: false
 ---
 
 # Business Rules Extraction
@@ -62,22 +63,93 @@ Files Analyzed: [N] files
 
 ## Artifacts
 
-| Rule | Source | Enforcement |
-|------|--------|-------------|
-| [Business constraint] | [filename.ts:42](path/to/filename.ts#L42) | [How it's enforced] |
-| [Business constraint] | [filename.ts:15](path/to/filename.ts#L15) | [How it's enforced] |
+### [Domain Area Name]
+[1-2 sentence summary of what this area covers and why it matters.]
+
+| Rule | Impact | Enforcement | Source |
+|------|--------|-------------|--------|
+| [Business constraint] | [Low/Medium/High/Critical] | [How it's enforced] | `filename.ts:42` |
+| [Business constraint] | [Low/Medium/High/Critical] | [How it's enforced] | `filename.ts:15` |
+
+### [Another Domain Area Name]
+[1-2 sentence context.]
+
+| Rule | Impact | Enforcement | Source |
+|------|--------|-------------|--------|
+| ... | ... | ... | ... |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/auth/validation.ts:5` | [src/auth/validation.ts:5](src/auth/validation.ts#L5) |
+| `src/auth/registration.ts:12` | [src/auth/registration.ts:12](src/auth/registration.ts#L12) |
 ```
 
-**Example:**
-```markdown
-## auth Module
+When a module has fewer than 5 rules, a single table without sub-headings is acceptable. Include a brief prose intro before the table.
 
-| Rule | Source | Enforcement |
-|------|--------|-------------|
-| Age must be >= 18 | [src/auth/registration.ts:12](src/auth/registration.ts#L12) | Guard clause returns early |
-| Password must be 8+ chars | [src/auth/validation.ts:5](src/auth/validation.ts#L5) | @MinLength(8) decorator |
-| Email format validated | [src/auth/validation.ts:8](src/auth/validation.ts#L8) | Regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ |
-| Invalid token throws 401 | [src/auth/jwt.ts:23](src/auth/jwt.ts#L23) | throw new UnauthorizedError() |
+**Example (fewer than 5 rules):**
+```markdown
+# auth Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+## Artifacts
+
+These rules govern user authentication and registration validation.
+
+| Rule | Impact | Enforcement | Source |
+|------|--------|-------------|--------|
+| Age must be >= 18 | High | Guard clause returns early | `src/auth/registration.ts:12` |
+| Password must be 8+ chars | Critical | @MinLength(8) decorator | `src/auth/validation.ts:5` |
+| Email format validated | High | Regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ | `src/auth/validation.ts:8` |
+| Invalid token throws 401 | Critical | throw new UnauthorizedError() | `src/auth/jwt.ts:23` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/auth/registration.ts:12` | [src/auth/registration.ts:12](src/auth/registration.ts#L12) |
+| `src/auth/validation.ts:5` | [src/auth/validation.ts:5](src/auth/validation.ts#L5) |
+| `src/auth/validation.ts:8` | [src/auth/validation.ts:8](src/auth/validation.ts#L8) |
+| `src/auth/jwt.ts:23` | [src/auth/jwt.ts:23](src/auth/jwt.ts#L23) |
+```
+
+**Example (many rules, sub-sectioned):**
+```markdown
+# orders Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+## Artifacts
+
+### Order Validation
+Orders must pass several checks before being accepted. These rules enforce minimum values and stock availability.
+
+| Rule | Impact | Enforcement | Source |
+|------|--------|-------------|--------|
+| Order total must be >= $50 | High | Guard clause throws MinOrderError | `src/orders/validation.ts:12` |
+| Maximum 100 items per order | Medium | @Max(100) on items array | `src/orders/dto/create-order.dto.ts:5` |
+| Items must be in stock | High | Stock check before persistence | `src/orders/orders.service.ts:20` |
+
+### Payment Constraints
+Payment processing has additional safety rules to prevent fraud and ensure revenue recognition.
+
+| Rule | Impact | Enforcement | Source |
+|------|--------|-------------|--------|
+| Payment method must be active | Critical | Guard clause in payment service | `src/orders/payment.ts:15` |
+| Refund window is 30 days | High | Date comparison in refund handler | `src/orders/refund.ts:8` |
+| Daily payment limit is $10,000 | Critical | Cumulative check in payment service | `src/orders/payment.ts:30` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/orders/validation.ts:12` | [src/orders/validation.ts:12](src/orders/validation.ts#L12) |
+| `src/orders/dto/create-order.dto.ts:5` | [src/orders/dto/create-order.dto.ts:5](src/orders/dto/create-order.dto.ts#L5) |
+| `src/orders/orders.service.ts:20` | [src/orders/orders.service.ts:20](src/orders/orders.service.ts#L20) |
+| `src/orders/payment.ts:15` | [src/orders/payment.ts:15](src/orders/payment.ts#L15) |
+| `src/orders/refund.ts:8` | [src/orders/refund.ts:8](src/orders/refund.ts#L8) |
+| `src/orders/payment.ts:30` | [src/orders/payment.ts:30](src/orders/payment.ts#L30) |
 ```
 
 ## Core Principles
@@ -89,3 +161,17 @@ Files Analyzed: [N] files
 **One rule per row.** Don't combine multiple constraints into one artifact. If a function has three guard clauses, extract each as a separate rule.
 
 **Use plain language.** Write rules as natural language constraints ("Order total must be positive"), not code descriptions ("if total <= 0 return error").
+
+**Assess impact.** Categorize each rule's business impact:
+- **Critical** — Safety, security, or data loss prevention
+- **High** — Core business logic that directly affects revenue or compliance
+- **Medium** — Operational rules that govern normal system behavior
+- **Low** — Cosmetic preferences or UX polish
+
+Default to Medium when the impact is unclear from context.
+
+**Group by business domain.** When a module has many rules, organize them into logical groups using `###` headings named after the business concern (e.g., "Order Validation", "Payment Constraints", "Inventory Rules"). If a module has fewer than 5 rules, a single table is acceptable.
+
+**Use brief prose for context.** A 1-2 sentence summary before each table or group helps stakeholders understand the business context without reading every row. Focus on *why* the rules exist, not what they say.
+
+**Flag gaps.** If an endpoint handler performs operations but has no validation or guard clauses, note it: `MISSING: No validation rules found for [endpoint/handler]`. If a domain area appears to lack explicit rules that would normally be expected, flag it: `MISSING: No business rules extracted for [area]`.

@@ -1,6 +1,7 @@
 ---
 name: extract-user-stories
 description: This skill provides domain knowledge for extracting user stories from code. It should be used when the agent is tasked with mapping API endpoints to user actions, documenting controller capabilities, deriving "As a [role], I can [action]" stories from route handlers, or cataloging CLI commands. Make sure to use this skill whenever user-facing capabilities, API surface area, or system entry points need to be documented, regardless of framework.
+user-invocable: false
 ---
 
 # User Stories Extraction
@@ -62,30 +63,89 @@ Files Analyzed: [N] files
 
 ## Artifacts
 
-- As a [role], I can [action]
-  Source: [METHOD] [path] ([filename.ts:23](path/to/filename.ts#L23))
-  Implementation: [function name]
-  Auth: [authentication/authorization requirements, if any]
+### [Role Group]
+[1-2 sentence summary of what this role can do in this module.]
+
+| Story | Endpoint | Implementation | Auth | Source |
+|-------|----------|----------------|------|--------|
+| As a [role], I can [action] | [METHOD] [path] | [function name] | [auth requirements] | `filename.ts:23` |
+| As a [role], I can [action] | [METHOD] [path] | [function name] | [auth requirements] | `filename.ts:45` |
+
+### [Another Role Group]
+[1-2 sentence context.]
+
+| Story | Endpoint | Implementation | Auth | Source |
+|-------|----------|----------------|------|--------|
+| ... | ... | ... | ... | ... |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/controllers/auth.ts:23` | [src/controllers/auth.ts:23](src/controllers/auth.ts#L23) |
+| `src/controllers/auth.ts:45` | [src/controllers/auth.ts:45](src/controllers/auth.ts#L45) |
 ```
 
-**Example:**
+When a module has only one role, a single table without sub-headings is acceptable. Include a brief prose intro before the table.
+
+**Example (single role):**
 ```markdown
-## auth Module
+# auth Module
 
-- As a user, I can register with email/password
-  Source: POST /api/auth/register ([src/controllers/auth.ts:23](src/controllers/auth.ts#L23))
-  Implementation: register() function
-  Auth: None (public endpoint)
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
 
-- As a user, I can view my profile
-  Source: GET /api/auth/profile ([src/controllers/auth.ts:45](src/controllers/auth.ts#L45))
-  Implementation: getProfile() function
-  Auth: JWT required
+## Artifacts
 
-- As an admin, I can view all users
-  Source: GET /api/admin/users ([src/admin/users.ts:12](src/admin/users.ts#L12))
-  Implementation: findAll() function
-  Auth: JWT + Admin role required
+Authentication endpoints for user identity management.
+
+| Story | Endpoint | Implementation | Auth | Source |
+|-------|----------|----------------|------|--------|
+| As a user, I can register with email/password | POST /api/auth/register | register() | None (public) | `src/controllers/auth.ts:23` |
+| As a user, I can view my profile | GET /api/auth/profile | getProfile() | JWT required | `src/controllers/auth.ts:45` |
+| As a user, I can update my profile | PUT /api/auth/profile | updateProfile() | JWT required | `src/controllers/auth.ts:60` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/controllers/auth.ts:23` | [src/controllers/auth.ts:23](src/controllers/auth.ts#L23) |
+| `src/controllers/auth.ts:45` | [src/controllers/auth.ts:45](src/controllers/auth.ts#L45) |
+| `src/controllers/auth.ts:60` | [src/controllers/auth.ts:60](src/controllers/auth.ts#L60) |
+```
+
+**Example (multiple roles):**
+```markdown
+# admin Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+## Artifacts
+
+### User
+Standard users can manage their own resources within the admin area.
+
+| Story | Endpoint | Implementation | Auth | Source |
+|-------|----------|----------------|------|--------|
+| As a user, I can view my profile | GET /api/admin/me | getMyProfile() | JWT required | `src/admin/users.ts:12` |
+| As a user, I can update my settings | PUT /api/admin/me | updateMySettings() | JWT required | `src/admin/users.ts:25` |
+
+### Admin
+Admins have elevated access to manage all users and system configuration.
+
+| Story | Endpoint | Implementation | Auth | Source |
+|-------|----------|----------------|------|--------|
+| As an admin, I can view all users | GET /api/admin/users | findAll() | JWT + Admin role required | `src/admin/users.ts:40` |
+| As an admin, I can delete a user | DELETE /api/admin/users/:id | remove() | JWT + Admin role required | `src/admin/users.ts:55` |
+| As an admin, I can update system settings | PUT /api/admin/settings | updateSettings() | JWT + Admin role required | `src/admin/settings.ts:10` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/admin/users.ts:12` | [src/admin/users.ts:12](src/admin/users.ts#L12) |
+| `src/admin/users.ts:25` | [src/admin/users.ts:25](src/admin/users.ts#L25) |
+| `src/admin/users.ts:40` | [src/admin/users.ts:40](src/admin/users.ts#L40) |
+| `src/admin/users.ts:55` | [src/admin/users.ts:55](src/admin/users.ts#L55) |
+| `src/admin/settings.ts:10` | [src/admin/settings.ts:10](src/admin/settings.ts#L10) |
 ```
 
 ## Core Principles
@@ -96,4 +156,8 @@ Files Analyzed: [N] files
 
 **Include auth requirements.** Whether an endpoint requires authentication, and what role/permission it needs, is essential context for the story. A user story without auth context is incomplete.
 
-**Group by role when possible.** If most endpoints require one role and a few require another, consider grouping stories by role in the output for readability.
+**Group by role.** Organize stories into `###` headings by role when a module has multiple roles. Use "User", "Admin", "System", or whatever roles the code defines. If a module has only one role, a single table is fine.
+
+**Use brief prose for context.** A 1-2 sentence summary before each role group or table helps stakeholders quickly understand what capabilities that role has in this module.
+
+**Flag gaps.** If a controller has routes but some handlers appear to be stubs or have minimal implementation, note: `MISSING: [handler] appears to be unimplemented or a stub`. If there's a clear user action that has no corresponding endpoint (e.g., no password change endpoint despite a password field), note: `MISSING: No endpoint for [expected action]`.

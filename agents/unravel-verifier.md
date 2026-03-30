@@ -24,7 +24,7 @@ Verify [OUTPUT_FILE] against [SOURCE_FILES].
 
 **Output File:** [path to module extraction output, e.g., docs/output/business-rules/auth.md]
 **Source Files:** [files that were analyzed during extraction]
-**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations]
+**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations | api-contracts | dependency-map | test-coverage | evolution-history | domain-vocabulary]
 
 ## Verification Process
 
@@ -94,9 +94,9 @@ Summary:
 
 ## Domain Knowledge
 
-The orchestrator embeds domain knowledge directly in your prompt. This includes pattern definitions and output format. Use this to understand what should have been extracted.
+The orchestrator embeds the **complete extraction skill content** (the full SKILL.md file) directly in your prompt. This is your sole reference for pattern definitions, output format, and boundary rules. Use it to understand what should have been extracted.
 
-Do NOT attempt to use the Skill tool.
+The content will appear as a fenced code block marked **DOMAIN KNOWLEDGE** containing the full skill file. Use it exactly as written. Do NOT attempt to use the Skill tool — you cannot access it.
 
 ## Available Tools
 

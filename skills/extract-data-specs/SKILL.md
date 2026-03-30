@@ -1,6 +1,7 @@
 ---
 name: extract-data-specs
 description: This skill provides domain knowledge for extracting data specifications from code. It should be used when the agent is tasked with documenting ORM classes, database schemas, TypeScript interfaces, DTOs, validation annotations, Prisma schemas, Pydantic models, or any data structure definitions. Make sure to use this skill whenever data shapes, field constraints, or entity relationships need to be documented, regardless of the language or ORM used.
+user-invocable: false
 ---
 
 # Data Specifications Extraction
@@ -66,27 +67,69 @@ Files Analyzed: [N] files
 ## Artifacts
 
 ### Entity: [Name]
+[1-2 sentence summary of what this entity represents and its role in the system.]
+
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
-| [field name] | [data type] | [validation/rules] | [filename.ts:42](path/to/filename.ts#L42) |
+| [field name] | [data type] | [validation/rules] | `filename.ts:42` |
+
+### Entity: [Another Name]
+[1-2 sentence context.]
+
+| Field | Type | Constraints | Source |
+|-------|------|-------------|--------|
+| ... | ... | ... | ... |
+
+### Relationships
+[1-2 sentence summary of how entities relate to each other.]
+
+| From | To | Type | Source |
+|------|----|----|--------|
+| [entity.field] | [entity.field] | [One-to-many/Many-to-many/etc] | `filename.ts:12` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/user/user.entity.ts:5` | [src/user/user.entity.ts:5](src/user/user.entity.ts#L5) |
+| `src/user/user.entity.ts:6` | [src/user/user.entity.ts:6](src/user/user.entity.ts#L6) |
 ```
 
 **Example:**
 ```markdown
-## user Module
+# user Module
+
+Extraction: [YYYY-MM-DD]
+Files Analyzed: [N] files
+
+## Artifacts
 
 ### Entity: User
+Core user entity representing registered accounts in the system.
+
 | Field | Type | Constraints | Source |
 |-------|------|-------------|--------|
-| id | uuid | Primary key, auto-generated | [src/user/user.entity.ts:5](src/user/user.entity.ts#L5) |
-| email | string | @IsEmail, unique, required | [src/user/user.entity.ts:6](src/user/user.entity.ts#L6) |
-| password | string | @MinLength(8), required | [src/user/user.entity.ts:7](src/user/user.entity.ts#L7) |
-| role | enum | ADMIN, USER, default: USER | [src/user/user.entity.ts:8](src/user/user.entity.ts#L8) |
+| id | uuid | Primary key, auto-generated | `src/user/user.entity.ts:5` |
+| email | string | @IsEmail, unique, required | `src/user/user.entity.ts:6` |
+| password | string | @MinLength(8), required | `src/user/user.entity.ts:7` |
+| role | enum | ADMIN, USER, default: USER | `src/user/user.entity.ts:8` |
+| createdAt | timestamp | Auto-generated, immutable | `src/user/user.entity.ts:10` |
 
 ### Relationships
+Users can place multiple orders. Each order belongs to exactly one user.
+
 | From | To | Type | Source |
 |------|----|----|--------|
-| User.id | Order.userId | One-to-many | [src/user/user.entity.ts:12](src/user/user.entity.ts#L12) |
+| User.id | Order.userId | One-to-many | `src/user/user.entity.ts:12` |
+
+## Sources
+| Ref | Full Path |
+|-----|-----------|
+| `src/user/user.entity.ts:5` | [src/user/user.entity.ts:5](src/user/user.entity.ts#L5) |
+| `src/user/user.entity.ts:6` | [src/user/user.entity.ts:6](src/user/user.entity.ts#L6) |
+| `src/user/user.entity.ts:7` | [src/user/user.entity.ts:7](src/user/user.entity.ts#L7) |
+| `src/user/user.entity.ts:8` | [src/user/user.entity.ts:8](src/user/user.entity.ts#L8) |
+| `src/user/user.entity.ts:10` | [src/user/user.entity.ts:10](src/user/user.entity.ts#L10) |
+| `src/user/user.entity.ts:12` | [src/user/user.entity.ts:12](src/user/user.entity.ts#L12) |
 ```
 
 ## Core Principles
@@ -98,3 +141,7 @@ Files Analyzed: [N] files
 **Document relationships.** Foreign keys, one-to-many/many-to-many mappings, and join tables are essential for understanding the data model. Group relationships in a separate table.
 
 **Mark required vs. optional clearly.** Distinguish between `email: string` (required) and `email?: string` (optional). This matters for API consumers and data validation.
+
+**Use brief prose for context.** A 1-2 sentence summary before each entity table helps stakeholders understand what the entity is and its role in the system without reading every field. Focus on the business purpose, not the technical definition.
+
+**Flag gaps.** If an entity field has no validation annotations, database constraints, or type restrictions, note: `MISSING: No constraints on [entity].[field]`. If an entity that should have relationships (e.g., an Order entity) has none defined, note: `MISSING: No relationships defined for [entity]`.

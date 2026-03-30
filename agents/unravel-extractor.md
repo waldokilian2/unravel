@@ -22,7 +22,7 @@ You are an Unravel Extractor. Extract [ARTIFACT_TYPE] from assigned files with b
 
 Extract [ARTIFACT_TYPE] from [FILES] and output to `docs/output/[artifact-type]/[module-name].md`
 
-**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations]
+**Artifact Type:** [business-rules | process-flows | data-specs | user-stories | security-nfrs | integrations | api-contracts | dependency-map | test-coverage | evolution-history | domain-vocabulary]
 **Files:** [specific file paths provided by orchestrator]
 **Module Name:** [provided by orchestrator — e.g., "auth", "payment", "core"]
 
@@ -65,13 +65,15 @@ Files Analyzed: [N] files
 
 ## Domain Knowledge
 
-The orchestrator embeds domain knowledge directly in your prompt. This includes:
+The orchestrator embeds the **complete extraction skill content** (the full SKILL.md file) directly in your prompt. This is your sole source of truth for:
 - **What to Extract** — Pattern definitions for your artifact type
-- **Hotspot Discovery** — Additional file discovery patterns
-- **Output Format** — Expected output structure
+- **Where [Type] Lives** — Boundary rules vs. other artifact types
+- **Hotspot Discovery** — File discovery patterns
+- **Pattern Signals** — Code pattern → artifact mapping table
+- **Output Format** — Expected output structure with examples
 - **Core Principles** — Extraction guidelines
 
-Use this embedded knowledge to guide your extraction. Do NOT attempt to use the Skill tool.
+The content will appear as a fenced code block marked **DOMAIN KNOWLEDGE** containing the full skill file. Use it exactly as written. Do NOT attempt to use the Skill tool — you cannot access it.
 
 ## Available Tools
 
