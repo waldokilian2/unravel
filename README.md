@@ -178,6 +178,14 @@ Claude: Unravel can extract these artifact types:
 
        [You select Business Logic]
 
+Claude: Which Business Logic types?
+
+       [✓] Business Rules — Validation constraints, access controls, error conditions
+       [✓] Process & Data Flows — Function call chains, state machines, decision paths
+       [✓] User Stories — End-user actions from controllers, routes, CLI handlers
+
+       [You select all three]
+
 Claude: Would you like independent verification?
 
        [ ] Yes - Most thorough, slower
