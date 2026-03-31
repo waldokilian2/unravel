@@ -1,5 +1,6 @@
 ---
 name: synthesize-test-plan
+user-invocable: true
 description: >
   Synthesize extracted test and business artifacts into a prioritized test plan with coverage gap analysis.
   This is a post-extraction command that reads files already created by Unravel's extraction pipeline.

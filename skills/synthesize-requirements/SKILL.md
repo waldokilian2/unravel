@@ -1,6 +1,7 @@
 ---
 name: synthesize-requirements
 description: This skill synthesizes extracted business artifacts into a stakeholder-ready requirements document. It should be used when the agent is asked to generate a requirements document, create a requirements document, synthesize requirements, combine extracted requirements, merge extracted artifacts into a unified requirements spec, produce a stakeholder requirements doc from extraction outputs, or run /synthesize-requirements. Make sure to use this skill whenever a user wants to produce a consolidated requirements document from Unravel's extraction pipeline outputs (business-rules, user-stories, security-nfrs, process-flows).
+user-invocable: true
 ---
 
 # Requirements Document Synthesis
